@@ -8,8 +8,9 @@ export default function MainLayout() {
                 headerShown: false
             }}
         >
-            <Stack.Screen name = '(delivery)' />
-            <Stack.Screen name = '(table' />
+            <Stack.Screen name = 'home' />
+            <Stack.Screen name = 'posts' />
+            <Stack.Screen name = '(profile)' />
         </Stack>
     )
 }
