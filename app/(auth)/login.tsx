@@ -1,12 +1,69 @@
-import { View, Text, StyleSheet, TextInput, Pressable } from 'react-native'
-import React, { useState } from 'react'
+import InfoModal from '@/components/InfoModal'
+import { Feather, Ionicons } from '@expo/vector-icons'
+import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
+import React, { useRef, useState } from 'react'
+import { Animated, Easing, Pressable, StyleSheet, Switch, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native'
+
+function AnimatedSwitch() {
+  const [selected, setSelected] = useState(0);
+  const translateX = useRef(new Animated.Value(0)).current;
+  const dim = useWindowDimensions()
+
+  const toggleOption = (index: any) => {
+    Animated.timing(translateX, {
+      toValue: index,
+      duration: 300,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+    setSelected(index);
+  };
+  const switchWidth = dim.width*0.9;
+  const ballWidth = switchWidth/2;
+
+  return (
+    <View style={styles.bContainer}>
+      <View style={[styles.switchBase, { width: switchWidth }]}>
+
+        {/* Opción izquierda */}
+        <TouchableOpacity style={styles.option} onPress={() => toggleOption(0)}>
+          <Feather name="user" size={22} color={selected== 0? 'black' : '#00000055'} />
+          <Text style={selected === 0 ? styles.labelActive : styles.labelInactive}>Client</Text>
+        </TouchableOpacity>
+
+        {/* Opción derecha */}
+        <TouchableOpacity style={styles.option} onPress={() => toggleOption(1)}>
+          <Ionicons name="storefront-outline" size={22} color={selected== 1? 'black' : '#00000055'} />
+          <Text style={selected === 1 ? styles.labelActive : styles.labelInactive}>Staff</Text>
+        </TouchableOpacity>
+
+        <Animated.View
+          style={[
+            styles.ball,
+            {
+              width: ballWidth,
+              transform: [{
+                translateX: translateX.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, switchWidth - ballWidth],
+                })
+              }],
+            backgroundColor: selected == 0? '#9ec7f0ff' : '#eebbacff',
+            },
+          ]}
+        />
+      </View>
+    </View>
+  );
+}
 
 export default function login() {
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const router = useRouter()
+  const [visible, setVisible] = useState(true)
 
   const field = (text: string, change: any, info: string, secure: boolean = false) => {
     return (
@@ -21,26 +78,38 @@ export default function login() {
     )
   }
 
-  const button = (text: string, pressed: any, color: string) => {
-    return (
-      <Pressable
-        style={({pressed}) => [styles.pressable, {backgroundColor: color}, pressed && {transform: [{scale: 0.9}]}]}
-        onPress={pressed}
-      >
-        <Text style = {styles.pText} >{text}</Text>
-      </Pressable>
-    )
-  }
-
   return (
-    <View style={[StyleSheet.absoluteFill, styles.screen]} >
-      <Text style = {styles.pText} >login</Text>
-      {field(email, setEmail, "Write your email")}
-      {field(password, setPassword, "Write your password", true)}
-      {button("Log in", () => router.navigate('/(main)/home'), "#7dcfa1ff")}
-      <Text>or</Text>
-      {button("Register", () => router.navigate('/(auth)/register'), "#df8b88ff")}
-    </View>
+    <LinearGradient
+      colors={['#8fc3ecff', '#cce5f8ff', '#ffffffff']}
+      style={[StyleSheet.absoluteFill, styles.screen]} >
+      <InfoModal visible={visible} action={() => setVisible(false)} />
+      <Text style={styles.title} >Yummi</Text>
+      <Text style={styles.text} >Select your role</Text>
+      <AnimatedSwitch/>
+      <View style={styles.container}>
+        <Text style={[styles.text, { alignSelf: 'flex-start' }]}>Email</Text>
+        {field(email, setEmail, "your@email.com")}
+        <Text style={[styles.text, { alignSelf: 'flex-start' }]}>Password</Text>
+        {field(password, setPassword, "Abc-123", true)}
+        <View style={styles.rowView}>
+          <Switch />
+          <Text style={styles.subtext} >Remember me</Text>
+        </View>
+        <Pressable
+          style={({ pressed }) => [styles.pressable, pressed && { transform: [{ scale: 0.9 }] }]}
+          onPress={() => router.navigate('/(main)/home')}
+        >
+          <Text style={styles.pText} >Log in</Text>
+        </Pressable>
+      </View>
+      <Text style={styles.subtext}>or</Text>
+      <View style={styles.rowView}>
+        <Text>New in Yummi?</Text>
+        <TouchableOpacity onPress={() => router.navigate('/(auth)/register')}>
+          <Text style={[styles.text, { color: '#8ca9d3ff' }]}>Create account</Text>
+        </TouchableOpacity>
+      </View>
+    </LinearGradient>
   )
 }
 
@@ -49,28 +118,97 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center'
   },
-  field: {
+  container: {
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 7,
-    borderWidth: 1,
-    margin: 2,
-    padding: 5,
-    width: 300,
-    backgroundColor: 'transparent'
+    width: '90%',
+    backgroundColor: 'white',
+    borderRadius: 30,
+    padding: 15
+  },
+  rowView: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  field: {
+    alignItems: 'center',
+    borderRadius: 15,
+    borderWidth: 1.5,
+    borderColor: '#b7d3ebff',
+    margin: 3,
+    width: '100%',
+    backgroundColor: '#f0f5f5ff'
   },
   pressable: {
     alignItems: 'center',
     justifyContent: 'center',
     padding: 7,
     margin: 30,
-    width: 300,
-    borderRadius: 20,
+    width: '90%',
+    backgroundColor: '#233253ff',
+    borderRadius: 25,
     borderWidth: 1,
-    elevation: 8
+    elevation: 5
+  },
+  title: {
+    fontSize: 30,
+    fontFamily: 'Poppins-Bold',
+    margin: 20
+  },
+  text: {
+    fontSize: 15,
+    fontFamily: 'Poppins-SemiBold',
+    margin: 10
+  },
+  subtext: {
+    fontSize: 14,
+    fontFamily: 'Poppins-Regular',
+    margin: 5,
+    maxWidth: '70%',
+    textAlign: 'center'
   },
   pText: {
-    fontSize: 30,
-    fontWeight: 'semibold'
+    fontSize: 20,
+    fontFamily: 'BricolageGrotesque-SemiBold',
+    color: 'white'
+  },
+  bContainer: {
+    margin: 15,
+    alignItems: 'center',
+  },
+  switchBase: {
+    flexDirection: 'row',
+    backgroundColor: '#e1e6eb77',
+    borderRadius: 20,
+    position: 'relative',
+    height: 50,
+  },
+  option: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
+    height: 50,
+    flexDirection: 'row'
+  },
+  labelActive: {
+    color: 'black',
+    fontSize: 16,
+    fontFamily: 'BricolageGrotesque-SemiBold',
+    margin: 5
+  },
+  labelInactive: {
+    color: '#00000055',
+    fontSize: 14,
+    fontFamily: 'BricolageGrotesque-Regular',
+    margin: 5
+  },
+  ball: {
+    position: 'absolute',
+    top: 0,
+    left: 1,
+    height: 50,
+    borderRadius: 20,
+    zIndex: 1,
   }
 })
