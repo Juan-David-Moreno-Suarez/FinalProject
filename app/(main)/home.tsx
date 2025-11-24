@@ -1,8 +1,11 @@
-import { View, Text, StyleSheet, FlatList, Pressable, Animated } from 'react-native'
+import { View, Text, StyleSheet, FlatList, Pressable, Animated, Modal } from 'react-native'
 import React, { useEffect, useRef, useState } from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import { TextInput } from 'react-native'
+
+// 👇 importa tu chat (está en el mismo folder /app/(main)/)
+import WaitiaChat from './chat'
 
 export default function home() {
 
@@ -22,6 +25,7 @@ export default function home() {
       default: return []
     }
   }
+
   const BUTTON_HEIGHT = 75; // igual que estilos.catButton.height
   const ballPosition = useRef(new Animated.Value(0)).current
   useEffect(() => {
@@ -65,6 +69,9 @@ export default function home() {
     )
   }
 
+  // ======= Chat flotante =======
+  const [chatOpen, setChatOpen] = useState(false)
+
   return (
     <LinearGradient
       colors={['#b6d8f3ff', '#d8e9f7ff', '#ffffffff']}
@@ -73,6 +80,7 @@ export default function home() {
       <View style={styles.topContainer}>
         <Text style={styles.title} >Yummi</Text>
       </View>
+
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
           <Feather name="search" size={18} color="black" />
@@ -113,10 +121,7 @@ export default function home() {
         </View>
         <View style={styles.menuContainer}>
           <FlatList
-            data={
-              shownCat(selCat)
-            }
-
+            data={shownCat(selCat)}
             keyExtractor={(item) => item}
             renderItem={({ item }) => (
               <View>
@@ -141,6 +146,56 @@ export default function home() {
           </View>
         </View>
       </View>
+
+      {/* ===== FAB del chat flotante ===== */}
+      <Pressable
+        onPress={() => setChatOpen(true)}
+        style={{
+          position: 'absolute',
+          right: 18,
+          bottom: 90,             // deja aire sobre la barra de tabs
+          width: 56,
+          height: 56,
+          borderRadius: 28,
+          backgroundColor: '#FDA597',
+          alignItems: 'center',
+          justifyContent: 'center',
+          shadowColor: '#000',
+          shadowOpacity: 0.15,
+          shadowRadius: 8,
+          shadowOffset: { width: 0, height: 4 },
+          elevation: 8
+        }}
+      >
+        <Ionicons name="chatbubble-ellipses" size={24} color="white" />
+      </Pressable>
+
+      {/* ===== Modal con el chat ===== */}
+      <Modal visible={chatOpen} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => setChatOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: '#F5FAF9' }}>
+          {/* Botón cerrar */}
+          <Pressable
+            onPress={() => setChatOpen(false)}
+            style={{
+              position: 'absolute',
+              top: 36,
+              right: 16,
+              zIndex: 10,
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: 'rgba(0,0,0,0.08)',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <Ionicons name="close" size={22} color="#181F39" />
+          </Pressable>
+
+          {/* Tu pantalla de chat dentro del modal */}
+          <WaitiaChat />
+        </View>
+      </Modal>
 
     </LinearGradient>
   )
@@ -240,4 +295,3 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffc0c0ff'
   }
 })
-

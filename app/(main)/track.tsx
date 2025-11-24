@@ -8,7 +8,11 @@ import {
   ScrollView,
   Platform,
   StatusBar,
+  Image,
 } from "react-native";
+import { useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 
 /* ------------------ Tipos ------------------ */
 type StepStatus = "done" | "current" | "pending";
@@ -17,7 +21,6 @@ type Step = {
   id: string;
   title: string;
   subtitle: string;
-  // status se calcula respecto al índice actual
 };
 
 type OrderItem = {
@@ -29,8 +32,20 @@ type OrderItem = {
   note?: string;
 };
 
+/* ---- assets de los pasos (usa los nombres que me diste) ---- */
+const stepIconByTitle: Record<string, any> = {
+  Tomado: require("../../assets/images/Tomando.png"),
+  "Avisado a cocina": require("../../assets/images/avisando a cocina.png"),
+  "En preparación": require("../../assets/images/en preparacion.png"),
+  Emplatando: require("../../assets/images/emplatando.png"),
+  "En camino": require("../../assets/images/en camino.png"),
+  Entregado: require("../../assets/images/entregado.png"),
+};
+
 /* ----------------- Pantalla ----------------- */
-export default function track() {
+export default function Track() {
+  const router = useRouter();
+
   const steps: Step[] = [
     { id: "s1", title: "Tomado", subtitle: "Tu orden ha sido recibida" },
     { id: "s2", title: "Avisado a cocina", subtitle: "La cocina ha recibido tu pedido" },
@@ -40,8 +55,8 @@ export default function track() {
     { id: "s6", title: "Entregado", subtitle: "¡Disfruta tu comida!" },
   ];
 
-  // Índice de la etapa actual (0..steps.length-1)
-  const [current, setCurrent] = useState<number>(2); // cambia según necesidad
+  // índice de la etapa actual
+  const [current, setCurrent] = useState<number>(2);
 
   const order: OrderItem[] = [
     { id: "o1", name: "Pizza Margherita", qty: 1, kcal: 850, price: 18.5, note: "Extra queso" },
@@ -49,37 +64,48 @@ export default function track() {
     { id: "o3", name: "Limonada Natural", qty: 1, kcal: 120, price: 4.5 },
   ];
 
-  const subtotal = useMemo(
-    () => order.reduce((acc, it) => acc + it.price, 0),
-    [order]
-  );
-  const taxes = 6.89; // solo UI
+  const subtotal = useMemo(() => order.reduce((acc, it) => acc + it.price, 0), [order]);
+  const taxes = 6.89;
   const total = subtotal + taxes;
 
   const progress = (current / (steps.length - 1)) * 100;
 
-  // util para simular el avance (puedes quitarlo en producción)
+  // simular avance (útil en demo)
   const advance = () => setCurrent((i) => Math.min(i + 1, steps.length - 1));
+
+  const goBack = () => router.back();
+  const goPay = () => router.push("/(main)/pagos");
 
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Fondo/banda superior */}
-      <View style={styles.heroBackdrop}>
-        <View style={styles.heroTop} />
-        <View style={styles.heroBottom} />
-      </View>
+      {/* ---- HEADER tipo “pastilla” con degradado ---- */}
+      <LinearGradient
+        colors={["#F3B7B0", "#CFEFE8"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.headerGradient, shadow(18)]}
+      >
+        <View style={styles.headerTopRow}>
+          <Pressable style={styles.backBtn} onPress={goBack} hitSlop={10}>
+            <Ionicons name="chevron-back" size={22} color="#2A3040" />
+          </Pressable>
+          <Text style={styles.headerTitle}>Seguimiento</Text>
+          <View style={{ width: 36 }} />
+        </View>
+
+        <View style={styles.headerChipsRow}>
+          <Pill label="Mesa 12" tone="mint" large />
+          <Pill label="Juan Perez" tone="white" large />
+        </View>
+
+        <Text style={styles.headerHint}>Te avisaremos en cada fase</Text>
+      </LinearGradient>
 
       <View style={styles.container}>
-        <Header />
-
-        <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
-          {/* Chips de mesa y cliente */}
-          <View style={styles.headerChipsRow}>
-            <Pill label="Mesa 12" tone="mint" />
-            <Pill label="Juan Perez" tone="gray" />
-          </View>
-          <Text style={styles.phaseHint}>Te avisaremos en cada fase</Text>
-
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 140 }}
+          showsVerticalScrollIndicator={false}
+        >
           {/* Timeline de estados */}
           <View style={[styles.cardOuter, shadow(14)]}>
             {steps.map((s, idx) => {
@@ -99,7 +125,7 @@ export default function track() {
             })}
           </View>
 
-          {/* Tarjeta de estado (barra de progreso + mensajito) */}
+          {/* Tarjeta de estado (barra de progreso + cola) */}
           <View style={[styles.stateCard, shadow(10)]}>
             <View style={styles.progressRow}>
               <Text style={styles.timeText}>00:00</Text>
@@ -117,14 +143,14 @@ export default function track() {
           <OrderSummaryCard items={order} subtotal={subtotal} taxes={taxes} total={total} />
         </ScrollView>
 
-        {/* CTA inferior */}
+        {/* ---- CTA inferior con botón PAGAR “pastilla” amarilla ---- */}
         <View style={[styles.bottomBar, shadow(16)]}>
-          <Text style={styles.bottomIcon}>⭐</Text>
-          <Pressable style={styles.payBtn}>
+          <Pressable style={styles.payBtn} onPress={goPay}>
+            <Ionicons name="star-outline" size={20} color="#1B2533" style={{ marginRight: 10 }} />
             <Text style={styles.payBtnText}>PAGAR</Text>
           </Pressable>
 
-          {/* Botón para simular avance (quitar si no lo necesitas) */}
+          {/* (solo para demo) avanzar estado */}
           <Pressable onPress={advance} style={styles.advanceBtn} hitSlop={10}>
             <Text style={styles.advanceTxt}>Avanzar</Text>
           </Pressable>
@@ -136,31 +162,24 @@ export default function track() {
 
 /* ------------------ Subcomponentes ------------------ */
 
-function Header() {
+type PillProps = { label: string; tone?: "mint" | "white" | "gray"; large?: boolean };
+function Pill({ label, tone = "gray", large = false }: PillProps) {
+  const base = [styles.pill, large && styles.pillLg];
+  let bg = "#F0F2F6",
+    bd = "#E4E8EE",
+    tx = "#374151";
+  if (tone === "mint") {
+    bg = "#D3F0E7";
+    bd = "#BFE7DA";
+    tx = "#1F6A5C";
+  } else if (tone === "white") {
+    bg = "#FFFFFF";
+    bd = "#FFFFFF";
+    tx = "#1F2937";
+  }
   return (
-    <View style={styles.headerRow}>
-      <Pressable style={[styles.navBtn, shadow(4)]}>
-        <Text style={styles.navBtnTxt}>‹</Text>
-      </Pressable>
-      <Text style={styles.title}>Seguimiento</Text>
-      <View style={{ width: 36 }} />
-    </View>
-  );
-}
-
-type PillProps = { label: string; tone?: "mint" | "gray" };
-function Pill({ label, tone = "gray" }: PillProps) {
-  const s =
-    tone === "mint"
-      ? [styles.pill, styles.pillMint]
-      : [styles.pill, styles.pillGray];
-  const t =
-    tone === "mint"
-      ? [styles.pillTxt, { color: "#1F6A5C" }]
-      : [styles.pillTxt, { color: "#374151" }];
-  return (
-    <View style={s}>
-      <Text style={t}>{label}</Text>
+    <View style={[...base, { backgroundColor: bg, borderColor: bd }]}>
+      <Text style={[styles.pillTxt, { color: tx }]}>{label}</Text>
     </View>
   );
 }
@@ -172,29 +191,32 @@ type StepRowProps = {
   status: StepStatus;
   showConnector: boolean;
 };
-function StepRow({ index, title, subtitle, status, showConnector }: StepRowProps) {
-  const leftBg =
-    status === "done" || status === "current" ? "#CDEFE7" : "#E8EDF3";
-  const leftBorder = status === "current" ? "#00A88B" : "#FFFFFF";
-  const icon = status === "done" ? "✔️" : status === "current" ? "⏳" : "•";
+function StepRow({ title, subtitle, status, showConnector }: StepRowProps) {
+  const done = status === "done";
+  const current = status === "current";
 
   return (
     <View style={styles.stepRow}>
-      {/* Columna izquierda (icono + conector) */}
+      {/* Columna izquierda: imagen del estado */}
       <View style={styles.leftCol}>
-        <View style={[styles.tickBox, { backgroundColor: leftBg, borderColor: leftBorder }, shadow(6)]}>
-          <Text style={styles.tickIcon}>{icon}</Text>
+        <View style={[styles.iconWrap, shadow(6), current && { borderColor: "#00A88B" }]}>
+          <Image source={stepIconByTitle[title]} resizeMode="cover" style={styles.stepImage} />
+          {(done || current) && (
+            <View style={styles.checkBadge}>
+              <Text style={{ color: "#fff", fontSize: 12 }}>✓</Text>
+            </View>
+          )}
         </View>
         {showConnector && <View style={styles.connector} />}
       </View>
 
-      {/* Contenido */}
+      {/* Contenido derecha */}
       <View style={styles.rightCol}>
         <View style={styles.stepHeader}>
           <Text style={[styles.stepTitle, status === "pending" && { opacity: 0.6 }]}>{title}</Text>
           <View>
-            {status === "done" && <Badge label="Hecho" tone="done" />}
-            {status === "current" && <Badge label="Actual" tone="current" />}
+            {done && <Badge label="Hecho" tone="done" />}
+            {current && <Badge label="Actual" tone="current" />}
           </View>
         </View>
         <Text style={[styles.stepSub, status === "pending" && { opacity: 0.7 }]}>{subtitle}</Text>
@@ -229,11 +251,11 @@ function OrderSummaryCard({ items, subtotal, taxes, total }: OrderSummaryCardPro
         <Text style={styles.orderTotal}>{formatCurrency(total)}</Text>
       </View>
 
-      {items.map((it, idx) => (
+      {items.map((it) => (
         <View key={it.id} style={styles.orderRow}>
           <View style={{ flex: 1 }}>
             <Text style={styles.itemLine}>
-              {it.name}  <Text style={styles.muted}>× {it.qty}</Text>
+              {it.name} <Text style={styles.muted}>× {it.qty}</Text>
             </Text>
             {!!it.note && <Text style={styles.itemNote}>{it.note}</Text>}
           </View>
@@ -265,7 +287,7 @@ function OrderSummaryCard({ items, subtotal, taxes, total }: OrderSummaryCardPro
 /* ------------------ Estilos ------------------ */
 
 const BG = "#F6F7FB";
-const TEXT = "#111827";
+const TEXT = "#0F172A"; // oscuro
 const MUTED = "#6B7280";
 
 const styles = StyleSheet.create({
@@ -276,57 +298,62 @@ const styles = StyleSheet.create({
   },
   container: { flex: 1, paddingHorizontal: 16 },
 
-  /* Hero */
-  heroBackdrop: {
-    position: "absolute",
-    left: 0, right: 0, top: 0,
-    height: 170,
+  /* Header “pastilla” */
+  headerGradient: {
+    marginHorizontal: 12,
+    marginTop: 6,
+    borderRadius: 36,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 18,
   },
-  heroTop: {
-    position: "absolute",
-    left: -30, right: -30, top: -40, height: 160,
-    backgroundColor: "#EBD9D6", // rosado suave
-    borderBottomLeftRadius: 36,
-    borderBottomRightRadius: 36,
-  },
-  heroBottom: {
-    position: "absolute",
-    left: -30, right: -30, top: 70, height: 110,
-    backgroundColor: "#D8F1EB", // verde agua
-    borderTopLeftRadius: 36,
-    borderTopRightRadius: 36,
-  },
-
-  /* Header */
-  headerRow: {
+  headerTopRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 8,
+    marginBottom: 8,
   },
-  navBtn: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center", justifyContent: "center",
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#ffffff",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  navBtnTxt: { fontSize: 22, lineHeight: 22, color: TEXT, marginTop: -2 },
-  title: { flex: 1, textAlign: "center", fontSize: 28, fontWeight: "800", color: TEXT },
-
-  /* Chips fila */
+  headerTitle: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: 30,
+    fontWeight: "900",
+    color: TEXT,
+  },
   headerChipsRow: {
     flexDirection: "row",
-    gap: 10,
-    marginTop: 12,
+    gap: 14,
+    alignItems: "center",
+    justifyContent: "flex-start",
+    marginTop: 8,
     marginBottom: 6,
   },
+  headerHint: {
+    textAlign: "left",
+    marginTop: 6,
+    color: "#334155",
+    fontWeight: "600",
+  },
+
   pill: {
-    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 18,
     borderWidth: 1,
   },
-  pillMint: { backgroundColor: "#E6F5EF", borderColor: "#CDEBDD" },
-  pillGray: { backgroundColor: "#F0F2F6", borderColor: "#E4E8EE" },
+  pillLg: {
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 22,
+  },
   pillTxt: { fontWeight: "800" },
-
-  phaseHint: { color: MUTED, marginBottom: 12 },
 
   /* Timeline card */
   cardOuter: {
@@ -334,29 +361,57 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingVertical: 10,
     paddingRight: 12,
+    marginTop: 14,
     marginBottom: 14,
   },
 
-  stepRow: { flexDirection: "row", paddingVertical: 10 },
+  stepRow: { flexDirection: "row", paddingVertical: 12 },
   leftCol: { width: 64, alignItems: "center" },
-  tickBox: {
-    width: 44, height: 44, borderRadius: 12,
-    borderWidth: 4, alignItems: "center", justifyContent: "center",
+  iconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    overflow: "hidden",
+    backgroundColor: "#F6F7FB",
+    borderWidth: 3,
+    borderColor: "#FFFFFF",
   },
-  tickIcon: { fontSize: 20 },
+  stepImage: { width: "100%", height: "100%" },
+  checkBadge: {
+    position: "absolute",
+    right: -4,
+    top: -6,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: "#00A88B",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#fff",
+  },
   connector: {
-    width: 2, height: 28, marginTop: 6,
+    width: 2,
+    height: 30,
+    marginTop: 8,
     backgroundColor: "#DDE5ED",
     borderRadius: 1,
   },
   rightCol: { flex: 1, paddingLeft: 8, paddingRight: 4 },
-  stepHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  stepHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   stepTitle: { fontSize: 16, fontWeight: "800", color: TEXT },
   stepSub: { color: MUTED, marginTop: 4 },
 
   badge: {
-    borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4,
-    borderWidth: 1, alignSelf: "flex-start",
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderWidth: 1,
+    alignSelf: "flex-start",
   },
   badgeTxt: { fontWeight: "800", fontSize: 12 },
 
@@ -372,7 +427,11 @@ const styles = StyleSheet.create({
   progressRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 },
   timeText: { color: MUTED, fontWeight: "600" },
   progressBar: {
-    flex: 1, height: 10, backgroundColor: "#E6E9EE", borderRadius: 8, overflow: "hidden",
+    flex: 1,
+    height: 10,
+    backgroundColor: "#E6E9EE",
+    borderRadius: 8,
+    overflow: "hidden",
   },
   progressFill: { height: "100%", backgroundColor: "#FFB4B1", borderRadius: 8 },
   queueRow: { marginBottom: 8 },
@@ -383,8 +442,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
     padding: 14,
-    borderWidth: 1, borderColor: "#E9EDF3",
-    marginTop: 4, marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#E9EDF3",
+    marginTop: 4,
+    marginBottom: 16,
   },
   orderHeader: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
   orderTitle: { flex: 1, color: TEXT, fontWeight: "800", fontSize: 16 },
@@ -404,20 +465,34 @@ const styles = StyleSheet.create({
 
   /* Bottom bar */
   bottomBar: {
-    position: "absolute", left: 12, right: 12, bottom: 12,
+    position: "absolute",
+    left: 12,
+    right: 12,
+    bottom: 12,
     backgroundColor: "#FFFFFF",
-    borderRadius: 24, padding: 10,
-    flexDirection: "row", alignItems: "center", gap: 12,
-    borderWidth: 1, borderColor: "#E6ECF2",
+    borderRadius: 24,
+    padding: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderWidth: 1,
+    borderColor: "#E6ECF2",
   },
-  bottomIcon: { fontSize: 16, marginLeft: 6 },
   payBtn: {
     flex: 1,
-    height: 48, borderRadius: 16,
-    alignItems: "center", justifyContent: "center",
-    backgroundColor: "#111827",
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#FFD78A",
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
   },
-  payBtnText: { color: "#FFFFFF", fontWeight: "800", letterSpacing: 1 },
+  payBtnText: {
+    color: "#1B2533",
+    fontWeight: "900",
+    letterSpacing: 1,
+    fontSize: 15,
+  },
   advanceBtn: { paddingHorizontal: 10, paddingVertical: 6 },
   advanceTxt: { color: "#7C3A3A", fontWeight: "800" },
 });
