@@ -9,9 +9,6 @@ const MENU: any = require('../app/data/menu.json');
 export type Turn = { role: 'user' | 'model'; text: string };
 export type AskResult = { reply: string };
  
-/* --- API key (tu config.ts está en la RAÍZ) --- */
-import { GEMINI_API_KEY } from './config';
- 
 /* --- Endpoint / Modelo (REST v1beta funciona estable) --- */
 const API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 const MODEL = 'gemini-2.5-flash';
@@ -46,11 +43,12 @@ function takeText(json: any): string | null {
  
 export async function askWaitia(content: string, history: Turn[] = []): Promise<AskResult> {
   const url = `${API_BASE}/models/${MODEL}:generateContent`;
+  const key = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
  
   const resp = await fetch(url, {
     method: 'POST',
     headers: {
-      'x-goog-api-key': GEMINI_API_KEY,
+      'x-goog-api-key': key ?? '',
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -60,9 +58,15 @@ export async function askWaitia(content: string, history: Turn[] = []): Promise<
   });
  
   if (!resp.ok) {
-    const err = await resp.text().catch(() => '');
-    throw new Error(`HTTP ${resp.status} @ ${MODEL}: ${err}`);
+  let errBody: any = null;
+  try {
+    errBody = await resp.json();
+  } catch {
+    errBody = await resp.text();
   }
+  console.error('Gemini error:', errBody);
+  throw new Error(`HTTP ${resp.status} @ ${MODEL}`);
+}
  
   const json = await resp.json();
   const text = takeText(json) ?? 'No tengo respuesta en este momento.';
