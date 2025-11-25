@@ -1,7 +1,6 @@
 // app/(main)/chat.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  SafeAreaView,
   View,
   Text,
   ScrollView,
@@ -138,7 +137,7 @@ export default function WaitiaChat() {
   const onChip = (label: string) => send(label);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#F5FAF9' }}>
+    <View style={{ flex: 1, backgroundColor: '#F5FAF9' }}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <LinearGradient
           colors={[Y.mint, Y.coral]}
@@ -302,6 +301,6 @@ export default function WaitiaChat() {
           </Pressable>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }

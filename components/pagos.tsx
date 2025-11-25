@@ -34,12 +34,12 @@ export default function Pagos() {
   const totalCard = useMemo(() => SUBTOTAL + TAXES + tipAmount, [SUBTOTAL, TAXES, tipAmount]);
 
   const proceed = () => {
-    // ⚠️ Navega sin el grupo (main)
-    router.push('/calificacion');
+    
+    //!router.push('/calificacion');
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <View style={styles.safe}>
       {/* Header degradado */}
       <LinearGradient
         colors={['#F6CFCF', '#F7E6DE', '#DAF1EC']}
@@ -166,7 +166,7 @@ export default function Pagos() {
           </Pressable>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

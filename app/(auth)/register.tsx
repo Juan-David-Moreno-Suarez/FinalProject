@@ -1,8 +1,9 @@
+import { supabase } from '@/utils/supabase'
 import { Feather, Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import React, { useRef, useState } from 'react'
-import { Animated, Easing, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native'
+import { Alert, Animated, Easing, Keyboard, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 
 function AnimatedSwitch({ selected, setSelected }: any) {
 
@@ -81,43 +82,97 @@ export default function register() {
   const [cPassword, setCPassword] = useState("")
   const router = useRouter()
   const [selected, setSelected] = useState(0);
+  const goToReg = async () => {
+  if (password !== cPassword) {
+    Alert.alert("Error", "Las contraseñas no coinciden");
+    return;
+  }
+  if (email.trim() === "") {
+    Alert.alert("Error", "Ingrese un correo válido");
+    return;
+  }
+  if (selected === 1 && id !== "1097783165") {
+    Alert.alert("Error en el ID", "Escribe correctamente el ID de tu empleador");
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (error) {  
+      Alert.alert("Error", "Error en la consulta de perfiles");
+      return;
+    }
+    if (data !== null) {
+      Alert.alert("Ya existe usuario", "Por favor utiliza otro correo");
+      return;
+    }
+
+    const { error: signError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: name, role: selected == 0 ? "client" : "waiter" } }
+    });
+
+    if (signError) {
+      Alert.alert("Error de registro", signError.message ?? "Intenta de nuevo");
+      return;
+    }
+
+    // Registro exitoso
+    setName("");
+    setEmail("");
+    setPassword("");
+    setCPassword("");
+
+    router.dismissTo("/(main)/home");
+  } catch (error) {
+    console.log(error)
+    Alert.alert("Error inesperado", "Intenta de nuevo");
+  }
+};
+
 
   return (
     <LinearGradient
       colors={['#f3c3c3ff', '#f0d8d8ff', '#ffffffff']}
       style={[StyleSheet.absoluteFill, styles.screen]} >
       <Text style={styles.title} >Yummi</Text>
-      <Text style={styles.text} >Select your role</Text>
+      <Text style={styles.text} >Selecciona tu rol</Text>
       <AnimatedSwitch selected={selected} setSelected={setSelected} />
       <View style={styles.container}>
         {selected == 1 &&
           <View style={[styles.screen, { width: '100%' }]}>
-            <Text style={[styles.text, { alignSelf: 'flex-start' }]}>Employer's ID</Text>
-            <Field text={id} change={setId} info={'Write the ID'} />
+            <Text style={[styles.text, { alignSelf: 'flex-start' }]}>ID de tu empleador</Text>
+            <Field text={id} change={setId} info={'Escribe el ID'} />
           </View>
         }
         {selected == 0 &&
           <View style={[styles.screen, { width: '100%' }]}>
-            <Text style={[styles.text, { alignSelf: 'flex-start' }]}>Name</Text>
-            <Field text={name} change={setName} info={'Write your full name'} />
+            <Text style={[styles.text, { alignSelf: 'flex-start' }]}>Nombre</Text>
+            <Field text={name} change={setName} info={'Escribe tu nombre'} />
           </View>
         }
-        <Text style={[styles.text, { alignSelf: 'flex-start' }]}>Email</Text>
-        <Field text={email} change={setEmail} info={"your@email.com"} />
-        <Text style={[styles.text, { alignSelf: 'flex-start' }]}>Password</Text>
+        <Text style={[styles.text, { alignSelf: 'flex-start' }]}>Correo electrónico</Text>
+        <Field text={email} change={setEmail} info={"tu@email.com"} />
+        <Text style={[styles.text, { alignSelf: 'flex-start' }]}>Contraseña</Text>
         <Field text={password} change={setPassword} info={"Abc-123"} secure={true} />
-        <Text style={[styles.text, { alignSelf: 'flex-start' }]}>Confirm password</Text>
+        <Text style={[styles.text, { alignSelf: 'flex-start' }]}>Confirmar contraseña</Text>
         <Field text={cPassword} change={setCPassword} info={"Abc-123"} secure={true} />
         <View style={styles.rowView}>
         </View>
         <Pressable
           style={({ pressed }) => [styles.pressable, pressed && { transform: [{ scale: 0.9 }] }]}
-          onPress={() => router.navigate('/(main)/home')}
+          onPress={() => goToReg()}
         >
-          <Text style={styles.pText} >Sign up</Text>
+          <Text style={styles.pText} >Registrarse</Text>
         </Pressable>
       </View>
-      <Text style={styles.subtext}>By continuing, you accept our Terms & Conditions</Text>
+      <Text style={styles.subtext}>Al continuar, aceptas nuestros Términos y condiciones</Text>
     </LinearGradient>
   )
 }

@@ -74,7 +74,7 @@ export default function Track() {
   const advance = () => setCurrent((i) => Math.min(i + 1, steps.length - 1));
 
   const goBack = () => router.back();
-  const goPay = () => router.push("/(main)/pagos");
+  const goPay = () => router.push('/pagos');
 
   return (
     <SafeAreaView style={styles.safe}>

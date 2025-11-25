@@ -1,3 +1,6 @@
+import { supabase } from "@/utils/supabase";
+import { Feather } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
   View,
@@ -8,6 +11,7 @@ import {
   Platform,
   StatusBar,
   TextInput,
+  Alert,
 } from "react-native";
 
 /* ---------- Tipos ---------- */
@@ -111,6 +115,16 @@ const PREFS_DEFAULT: Pref[] = [
 export default function ProfileScreen() {
   const [tab, setTab] = useState<TabKey>("summary");
   const [prefs, setPrefs] = useState<Pref[]>(PREFS_DEFAULT);
+  const router = useRouter();
+  const onLogOut = async () => {
+        const { error: logoutError } = await supabase.auth.signOut()
+        if (logoutError) {
+            Alert.alert("Error", "Error logging out")
+        } else {
+            router.dismissTo('/')
+        }
+
+    };
 
   const ordersCount = 24;
   const spent = 348;
@@ -128,7 +142,7 @@ export default function ProfileScreen() {
 
       <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
-          <HeaderPill />
+          <HeaderPill action={onLogOut}/>
 
           {/* Tarjeta principal */}
           <View style={[styles.mainCard, shadow(18)]}>
@@ -177,13 +191,18 @@ export default function ProfileScreen() {
 
 /* ---------- Subcomponentes UI ---------- */
 
-function HeaderPill() {
+function HeaderPill({action}:any) {
   return (
     <View style={styles.headerRow}>
       <View style={[styles.backPill, shadow(4)]}>
         <Text style={{ fontSize: 16 }}>‹</Text>
         <Text style={{ fontWeight: "800", marginLeft: 8 }}>Home</Text>
       </View>
+      <Pressable style = {{left: '70%'}}
+      onPress={action}
+      >
+        <Feather name="log-out" size={24} color="black" />
+      </Pressable>
     </View>
   );
 }
@@ -358,7 +377,7 @@ function SelectableChip({ label, active, tone = "gray", onPress }: SelectableChi
         ? { bg: "#FFE5E5", bd: "#FFCACA", tx: "#7C3A3A" }
         : { bg: "#FFFFFF", bd: "#F3E0E0", tx: "#7C3A3A" }
       : // mint/gray
-        active
+      active
         ? { bg: "#E6F5EF", bd: "#CDEBDD", tx: "#1F6A5C" }
         : { bg: "#FFFFFF", bd: "#E6ECF2", tx: "#4B5563" };
 
@@ -456,7 +475,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#EBD9D6",
     borderBottomRightRadius: 200,
   },
-  headerRow: { marginTop: 8, marginBottom: 8, flexDirection: "row" },
+  headerRow: { marginTop: 8, marginBottom: 8, flexDirection: "row" , alignItems: 'center', width: '100%'},
   backPill: {
     flexDirection: "row", alignItems: "center",
     backgroundColor: "#E6F5EF",

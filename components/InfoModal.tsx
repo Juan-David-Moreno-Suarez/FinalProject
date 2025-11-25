@@ -44,7 +44,7 @@ export default function InfoModal({ visible, action }: any) {
                     />
                     <View style ={{height: 20}}/>
                     <Text style={styles.text} >Yummi</Text>
-                    <Text style={styles.subtext} >Fresh & fun</Text>
+                    <Text style={styles.subtext} >Fresco y divertido</Text>
                     <Text style={styles.regtext} >Descubre menús deliciosos con el toque Yummi</Text>
                     <View style ={{height: 70}}/>
 
@@ -57,7 +57,7 @@ export default function InfoModal({ visible, action }: any) {
                         style={{ height: 370, width: 320, borderRadius: 30 }}
                     />
                     <View style ={{height: 30}}/>
-                    <Text style={styles.subtext} >Build your order</Text>
+                    <Text style={styles.subtext} >Crea tu orden</Text>
                     <Text style={styles.regtext} >Personaliza tamaños, toppings y todo lo que te gusta</Text>
                     <View style ={{height: 100}}/>
                 </LinearGradient>
@@ -69,7 +69,7 @@ export default function InfoModal({ visible, action }: any) {
                         style={{ height: 370, width: 200, borderRadius: 30 }}
                     />
                     <View style ={{height: 30}}/>
-                    <Text style={styles.subtext} >Track your order</Text>
+                    <Text style={styles.subtext} >Rastrea tu orden</Text>
                     <Text style={styles.regtext} >Sigue tu pedido en tiempo real, desde la cocina hasta tu mesa</Text>
                     <View style ={{height: 100}}/>
                 </LinearGradient>
@@ -79,7 +79,7 @@ export default function InfoModal({ visible, action }: any) {
                 onPress={page == 3 ? action : () => goToPage(page)}
                 style={({ pressed }) => [styles.button, pressed && { transform: [{ scale: 0.9 }] }]}
             >
-                <Text style={styles.bText} >{page == 3 ? 'Start your register' : 'Next page'}</Text>
+                <Text style={styles.bText} >{page == 3 ? 'Empezar' : 'Siguiente'}</Text>
             </Pressable>
         </Modal>
     )

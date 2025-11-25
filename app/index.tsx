@@ -28,13 +28,13 @@ export default function index() {
     <LinearGradient
       colors={['#8fc3ecff', '#cce5f8ff', '#ffffffff']}
       style={[StyleSheet.absoluteFill, styles.screen]} >
-      <Text style={styles.text} >Select your language</Text>
-      <Text style={styles.title} >Welcome to our restaurant!</Text>
+      <Text style={styles.title} >Bienvenido a nuestro restaurante!</Text>
 
       <View style={{ height: 20 }} />
-      <Link href={'/(main)/home'} asChild >
+      <Link href={'/(auth)/login'} asChild >
         <TouchableOpacity style={styles.touchable} >
-          <Text style={styles.touchableText} >Start</Text>
+          <Text style={styles.touchableText} >Iniciar
+          </Text>
         </TouchableOpacity>
       </Link>
       <View style = {[styles.decoration, {top:-100, right: -100}]}/>

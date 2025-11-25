@@ -16,7 +16,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { BarCodeScanner } from "expo-barcode-scanner";
+
 
 /** Pasos del modal */
 type Step = "confirm" | "rate";

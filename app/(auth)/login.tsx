@@ -1,9 +1,10 @@
 import InfoModal from '@/components/InfoModal'
-import { Feather, Ionicons } from '@expo/vector-icons'
+import { supabase } from '@/utils/supabase'
+import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import React, { useRef, useState } from 'react'
-import { Animated, Easing, Pressable, StyleSheet, Switch, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native'
+import { Alert, Animated, Easing, Keyboard, Pressable, StyleSheet, Switch, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 
 function AnimatedSwitch() {
   const [selected, setSelected] = useState(0);
@@ -29,13 +30,13 @@ function AnimatedSwitch() {
         {/* Opción izquierda */}
         <TouchableOpacity style={styles.option} onPress={() => toggleOption(0)}>
           <Feather name="user" size={22} color={selected== 0? 'black' : '#00000055'} />
-          <Text style={selected === 0 ? styles.labelActive : styles.labelInactive}>Client</Text>
+          <Text style={selected === 0 ? styles.labelActive : styles.labelInactive}>Cliente</Text>
         </TouchableOpacity>
 
         {/* Opción derecha */}
         <TouchableOpacity style={styles.option} onPress={() => toggleOption(1)}>
-          <Ionicons name="storefront-outline" size={22} color={selected== 1? 'black' : '#00000055'} />
-          <Text style={selected === 1 ? styles.labelActive : styles.labelInactive}>Staff</Text>
+          <MaterialIcons name="work" size={22} color={selected== 1? 'black' : '#00000055'} />
+          <Text style={selected === 1 ? styles.labelActive : styles.labelInactive}>Empleado</Text>
         </TouchableOpacity>
 
         <Animated.View
@@ -64,6 +65,16 @@ export default function login() {
   const [password, setPassword] = useState("")
   const router = useRouter()
   const [visible, setVisible] = useState(true)
+  const goToLog = async() => {
+    const {error: loginError} = await supabase.auth.signInWithPassword({email: email, password: password})
+    if (!loginError){
+      router.navigate('/(main)/home')
+    } else {
+      Keyboard.dismiss()
+      Alert.alert("Algo salió mal","Revisa tus credenciales")
+      
+    }
+  }
 
   const field = (text: string, change: any, info: string, secure: boolean = false) => {
     return (
@@ -84,29 +95,29 @@ export default function login() {
       style={[StyleSheet.absoluteFill, styles.screen]} >
       <InfoModal visible={visible} action={() => setVisible(false)} />
       <Text style={styles.title} >Yummi</Text>
-      <Text style={styles.text} >Select your role</Text>
+      <Text style={styles.text} >Selecciona tu rol</Text>
       <AnimatedSwitch/>
       <View style={styles.container}>
-        <Text style={[styles.text, { alignSelf: 'flex-start' }]}>Email</Text>
-        {field(email, setEmail, "your@email.com")}
-        <Text style={[styles.text, { alignSelf: 'flex-start' }]}>Password</Text>
+        <Text style={[styles.text, { alignSelf: 'flex-start' }]}>Correo electrónico</Text>
+        {field(email, setEmail, "tu@email.com")}
+        <Text style={[styles.text, { alignSelf: 'flex-start' }]}>Contraseña</Text>
         {field(password, setPassword, "Abc-123", true)}
-        <View style={styles.rowView}>
+        {/*<View style={styles.rowView}>
           <Switch />
           <Text style={styles.subtext} >Remember me</Text>
-        </View>
+        </View>*/}
         <Pressable
           style={({ pressed }) => [styles.pressable, pressed && { transform: [{ scale: 0.9 }] }]}
-          onPress={() => router.navigate('/(main)/home')}
+          onPress={() => goToLog()}
         >
-          <Text style={styles.pText} >Log in</Text>
+          <Text style={styles.pText} >Iniciar sesión</Text>
         </Pressable>
       </View>
-      <Text style={styles.subtext}>or</Text>
+      <Text style={styles.subtext}>o</Text>
       <View style={styles.rowView}>
-        <Text>New in Yummi?</Text>
+        <Text>Nuevo en Yummi?</Text>
         <TouchableOpacity onPress={() => router.navigate('/(auth)/register')}>
-          <Text style={[styles.text, { color: '#8ca9d3ff' }]}>Create account</Text>
+          <Text style={[styles.text, { color: '#8ca9d3ff' }]}>Crear cuenta</Text>
         </TouchableOpacity>
       </View>
     </LinearGradient>
