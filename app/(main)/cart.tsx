@@ -1,6 +1,4 @@
-import { Feather } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import React, { useMemo, useState } from "react";
+import React, { useContext, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -8,102 +6,171 @@ import {
   Pressable,
   FlatList,
   Platform,
-  StatusBar
+  StatusBar,
+  Modal,
+  Alert,
 } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useCart } from "../../contexts/CartContext";
+import { useRouter } from "expo-router";
+import { DataContext } from "@/contexts/DataContext";
 
-const initialItems = [
-  {
-    id: "1",
-    name: "Berry Bliss Smoothie",
-    emoji: "🥤",
-    chips: ["Grande", "Hielo", "Miel"],
-    kcal: 280,
-    price: 8.99,
-    qty: 1,
-    accent: "#9be9d5ff",
-    thumbBg: "#FFEDEB",
-  },
-  {
-    id: "2",
-    name: "Fresh Garden Salad",
-    emoji: "🥗",
-    chips: ["Mediano", "Aguacate", "Vinagreta"],
-    kcal: 320,
-    price: 20.98,
-    qty: 2,
-    accent: "#FFD6D6",
-    thumbBg: "#FFF4E2",
-  },
-  {
-    id: "3",
-    name: "Chocolate Brownie",
-    emoji: "🍫",
-    chips: ["Porción", "Helado", "Nueces"],
-    kcal: 450,
-    price: 6.99,
-    qty: 1,
-    accent: "#FFE5A9",
-    thumbBg: "#FFEDEE",
-  },
-];
-
-export default function cart() {
-  const [items, setItems] = useState(initialItems);
+export default function Cart() {
+  const { cartItems, removeItemFromCart, updateItemQty, clearCart } = useCart();
+  const {createOrder} = useContext(DataContext);
+  const [tableModalVisible, setTableModalVisible] = useState(false);
+  const [selectedTable, setSelectedTable] = useState<number | null>(null);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  const router = useRouter();
 
   const total = useMemo(
-    () => items.reduce((acc, it) => acc + it.price * it.qty, 0),
-    [items]
+    () => cartItems.reduce((acc: any, it: any) => acc + it.price * it.qty, 0),
+    [cartItems]
   );
 
   const inc = (id: any) =>
-    setItems((s) => s.map((it) => (it.id === id ? { ...it, qty: it.qty + 1 } : it)));
-  const dec = (id: any) =>
-    setItems((s) =>
-      s.map((it) =>
-        it.id === id ? { ...it, qty: Math.max(1, it.qty - 1) } : it
-      )
+    updateItemQty(
+      id,
+      cartItems.find((it: any) => it.id === id)?.qty + 1 || 1
     );
-  const removeItem = (id: any) => setItems((s) => s.filter((it) => it.id !== id));
+  const dec = (id: any) =>
+    updateItemQty(
+      id,
+      cartItems.find((it: any) => it.id === id)?.qty - 1 || 1
+    );
+
+  const tables = Array.from({ length: 10 }, (_, i) => i + 1);
+
+  const handleConfirmOrder = async() => {
+    if (selectedTable == null) {
+      Alert.alert("Mesa no seleccionada", "Por favor elige un número de mesa.");
+      return;
+    }
+
+    await createOrder(cartItems, selectedTable)
+    clearCart()
+    Alert.alert(
+      "Orden iniciada",
+      `Se ha comenzado la orden para la mesa ${selectedTable}.`
+    );
+    setTableModalVisible(false);
+  };
+
+  const handleActionButton = () => {
+    if (cartItems.length === 0) {
+      router.navigate('/(main)/home')
+    } else {
+      setTableModalVisible(true)
+      setIsButtonDisabled(false)
+    }
+  };
 
   return (
     <View style={styles.safe}>
       <View style={styles.container}>
         <Header />
         <Steps />
-        <FlatList
-          data={items}
-          keyExtractor={(it) => it.id}
-          contentContainerStyle={{ paddingBottom: 28, paddingTop: 28 }}
-          renderItem={({ item }) => (
-            <CartCard
-              item={item}
-              onInc={() => inc(item.id)}
-              onDec={() => dec(item.id)}
-              onRemove={() => removeItem(item.id)}
-            />
-          )}
-          ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
-          showsVerticalScrollIndicator={false}
-        />
+
+        {Array.isArray(cartItems) && cartItems.length > 0 ? (
+          <FlatList
+            data={cartItems}
+            keyExtractor={(it) => it.id}
+            contentContainerStyle={{ paddingBottom: 28, paddingTop: 28 }}
+            renderItem={({ item }) => (
+              <CartCard
+                item={item}
+                onInc={() => inc(item.id)}
+                onDec={() => dec(item.id)}
+                onRemove={() => removeItemFromCart(item)}
+              />
+            )}
+            ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+            showsVerticalScrollIndicator={false}
+          />
+        ) : (
+          <Text style={styles.emptyCartText}>El carrito está vacío</Text>
+        )}
 
         <View style={styles.footer}>
           <Text style={styles.totalLabel}>Total</Text>
-          <Text style={styles.totalValue}>
-            {formatCurrency(total)}
-          </Text>
+          <Text style={styles.totalValue}>{formatCurrency(total)}</Text>
 
-          <Pressable style = {({pressed})=>[pressed && {transform: [{scale: 0.9}]}]}>
+          <Pressable
+            style={({ pressed }) => [pressed && { transform: [{ scale: 0.9 }] }]}
+            onPress={handleActionButton}
+          >
             <LinearGradient
-              colors={['#f0a6a6ff', '#eee2d1ff', '#eee0cfff']}
+              colors={["#f0a6a6ff", "#eee2d1ff", "#eee0cfff"]}
               style={styles.payButton}
             >
-            <Text style={styles.payText}>Ir a pagar</Text>
-          </LinearGradient>
-        </Pressable>
-
+              <Text style={styles.payText}>
+                {cartItems.length === 0 ? "Escoger platos" : "Hacer pedido"}
+              </Text>
+            </LinearGradient>
+          </Pressable>
+        </View>
       </View>
+
+      {/* ===== Modal selección de mesa ===== */}
+      <Modal
+        transparent
+        visible={tableModalVisible}
+        animationType="fade"
+        onRequestClose={() => setTableModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Selecciona el número de mesa</Text>
+
+            <View style={styles.tablesWrap}>
+              {tables.map((num) => (
+                <Pressable
+                  key={num}
+                  onPress={() => setSelectedTable(num)}
+                  style={[
+                    styles.tableChip,
+                    selectedTable === num && styles.tableChipSelected,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.tableChipText,
+                      selectedTable === num && styles.tableChipTextSelected,
+                    ]}
+                  >
+                    {num}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <View style={styles.modalButtonsRow}>
+              <Pressable
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  setTableModalVisible(false);
+                  setSelectedTable(null);
+                }}
+              >
+                <Text style={styles.modalCancelText}>Cancelar</Text>
+              </Pressable>
+
+              <Pressable
+              disabled={isButtonDisabled}
+                style={[styles.modalConfirmButton, isButtonDisabled && {backgroundColor: '#B0B0B0'}]}
+                onPress={() =>{
+                  setIsButtonDisabled(true)
+                  handleConfirmOrder()
+                }}
+              >
+                <Text style={styles.modalConfirmText}>Finalizar</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
-    </View >
   );
 }
 
@@ -126,7 +193,6 @@ function Steps() {
     <View style={styles.stepsRow}>
       <Step label="Carrito" active />
       <Step label="Pago" />
-      <Step label="Confirmación" />
     </View>
   );
 }
@@ -144,27 +210,23 @@ function Step({ label, active }: any) {
 function CartCard({ item, onInc, onDec, onRemove }: any) {
   return (
     <View style={styles.cardWrap}>
-      {/* barra/acento superior */}
-      <View style={[styles.cardAccent, { backgroundColor: item.accent }]} />
+      <View style={[styles.cardAccent, { backgroundColor: "#fccdcdff" }]} />
       <View style={[styles.card, shadow(8)]}>
         <View style={styles.cardHeaderRow}>
-          <View style={[styles.thumb, { backgroundColor: item.thumbBg }, shadow(4)]}>
-            <Text style={styles.thumbEmoji}>{item.emoji}</Text>
-          </View>
+          <View
+            style={[styles.thumb, { backgroundColor: "#e1f8f2ff" }, shadow(4)]}
+          />
           <View style={{ flex: 1, marginLeft: 12 }}>
             <Text style={styles.itemTitle}>{item.name}</Text>
             <View style={styles.chipsRow}>
-              {item.chips.map((c: any) => (
-                <Chip key={c} label={c} />
-              ))}
+              <Text style={styles.chipText}>{item.description}</Text>
             </View>
 
             <View style={styles.kcalChip}>
               <Text style={styles.kcalBolt}>⚡</Text>
-              <Text style={styles.kcalText}>{item.kcal}</Text>
+              <Text style={styles.kcalText}>{item.calories}</Text>
             </View>
           </View>
-
         </View>
 
         <View style={styles.priceRow}>
@@ -188,27 +250,17 @@ function CartCard({ item, onInc, onDec, onRemove }: any) {
   );
 }
 
-function Chip({ label }: any) {
-  return (
-    <View style={styles.chip}>
-      <Text style={styles.chipText}>{label}</Text>
-    </View>
-  );
-}
-
 function formatCurrency(n: any) {
   try {
     return new Intl.NumberFormat("es-CO", {
       style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
+      currency: "COP",
+      minimumFractionDigits: 0,
     }).format(n);
   } catch {
     return `$${n.toFixed(2)}`;
   }
 }
-
-/* -------------------- Styles -------------------- */
 
 const BG = "#F6F7FB";
 const TEXT = "#1F2937";
@@ -224,8 +276,13 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
   },
-
-  /* Header */
+  emptyCartText: {
+    textAlign: "center",
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#7F8C9A",
+    marginTop: 20,
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -264,7 +321,6 @@ const styles = StyleSheet.create({
     marginTop: -2,
   },
 
-  /* Steps */
   stepsRow: {
     flexDirection: "row",
     gap: 10,
@@ -283,42 +339,6 @@ const styles = StyleSheet.create({
   stepText: { color: MUTED, fontWeight: "600" },
   stepTextActive: { color: "#B94A52", fontWeight: "700" },
 
-  /* Promo */
-  promoWrap: {
-    paddingVertical: 6,
-  },
-  promoCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFF9E9",
-    borderRadius: 18,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#FFE5A5",
-  },
-  promoTitle: {
-    color: TEXT,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  promoSubtitle: {
-    color: TEXT,
-    fontSize: 14,
-  },
-  promoBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 18,
-    backgroundColor: "#E6F5EF",
-    borderWidth: 1,
-    borderColor: "#CDEBDD",
-  },
-  promoBtnText: {
-    color: "#267A5A",
-    fontWeight: "700",
-  },
-
-  /* Cards */
   cardWrap: { position: "relative" },
   cardAccent: {
     position: "absolute",
@@ -411,7 +431,12 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   stepperSign: { fontSize: 20, fontWeight: "700", marginTop: -2 },
-  stepperQty: { width: 24, textAlign: "center", fontSize: 16, fontWeight: "700" },
+  stepperQty: {
+    width: 24,
+    textAlign: "center",
+    fontSize: 16,
+    fontWeight: "700",
+  },
 
   footer: {
     position: "absolute",
@@ -427,24 +452,102 @@ const styles = StyleSheet.create({
     ...shadow(10),
   },
   totalLabel: { color: MUTED, fontWeight: "600" },
-  totalValue: { flex: 1, textAlign: "right", fontSize: 16, fontWeight: "800", color: TEXT },
+  totalValue: {
+    flex: 1,
+    textAlign: "right",
+    fontSize: 16,
+    fontWeight: "800",
+    color: TEXT,
+  },
   payButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginLeft: 25,
     width: 180,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 16,
-    flexDirection: 'row'
+    flexDirection: "row",
   },
-  payText: { color: "black", fontFamily: 'BricolageGrotesque-Bold' },
+  payText: { color: "black", fontFamily: "BricolageGrotesque-Bold" },
+
+  /* ===== Modal styles ===== */
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.25)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalCard: {
+    width: "85%",
+    borderRadius: 20,
+    padding: 20,
+    backgroundColor: "#FFFFFF",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: TEXT,
+    marginBottom: 14,
+    textAlign: "center",
+  },
+  tablesWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 8,
+    marginBottom: 20,
+  },
+  tableChip: {
+    minWidth: 40,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tableChipSelected: {
+    backgroundColor: "#FFD8D8",
+    borderColor: "#F97373",
+  },
+  tableChipText: {
+    color: TEXT,
+    fontWeight: "600",
+  },
+  tableChipTextSelected: {
+    color: "#B91C1C",
+  },
+  modalButtonsRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 10,
+  },
+  modalCancelButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  modalCancelText: {
+    color: MUTED,
+    fontWeight: "600",
+  },
+  modalConfirmButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
+    backgroundColor: "#FFD8D8",
+  },
+  modalConfirmText: {
+    color: "#B94A52",
+    fontWeight: "700",
+  },
 });
+
 
 /* Cross-platform shadow helper */
 function shadow(elevation = 8) {
   if (Platform.OS === "android") return { elevation };
-  // iOS
   const op = 0.18 + Math.min(0.32, elevation * 0.01);
   return {
     shadowColor: "#000",

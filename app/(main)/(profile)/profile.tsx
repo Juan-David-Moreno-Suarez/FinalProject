@@ -1,7 +1,6 @@
 import { supabase } from "@/utils/supabase";
-import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -12,6 +11,7 @@ import {
   StatusBar,
   TextInput,
   Alert,
+  Image, // 👈 importamos Image
 } from "react-native";
 
 /* ---------- Tipos ---------- */
@@ -20,8 +20,8 @@ type TabKey = "summary" | "history" | "favorites";
 type Order = {
   id: string;
   title: string;
-  dateLabel: string; // ej. "28 Oct 2025"
-  subtitle?: string; // hora / modalidad
+  dateLabel: string;
+  subtitle?: string;
   kcal: number;
   price: number;
   tags: string[];
@@ -116,15 +116,15 @@ export default function ProfileScreen() {
   const [tab, setTab] = useState<TabKey>("summary");
   const [prefs, setPrefs] = useState<Pref[]>(PREFS_DEFAULT);
   const router = useRouter();
-  const onLogOut = async () => {
-        const { error: logoutError } = await supabase.auth.signOut()
-        if (logoutError) {
-            Alert.alert("Error", "Error logging out")
-        } else {
-            router.dismissTo('/')
-        }
 
-    };
+  const onLogOut = async () => {
+    const { error: logoutError } = await supabase.auth.signOut();
+    if (logoutError) {
+      Alert.alert("Error", "Error logging out");
+    } else {
+      router.dismissTo("/");
+    }
+  };
 
   const ordersCount = 24;
   const spent = 348;
@@ -137,19 +137,23 @@ export default function ProfileScreen() {
       {/* Fondo decorativo */}
       <View style={styles.hero}>
         <View style={styles.heroTop} />
-
       </View>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
-          <HeaderPill action={onLogOut}/>
+          {/* Header: dejamos el icono de logout solo como decoración (NO clickable) */}
+          <HeaderPill />
 
           {/* Tarjeta principal */}
           <View style={[styles.mainCard, shadow(18)]}>
-            {/* Avatar */}
+            {/* Avatar con imagen de perfil */}
             <View style={styles.avatarWrap}>
               <View style={[styles.avatar, shadow(8)]}>
-                <Text style={{ fontSize: 40 }}>🧑‍🍳</Text>
+                <Image
+                  source={require('../../../assets/images/profilePic.jpeg')}
+                  style={{ width: 96, height: 96, borderRadius: 48 }}
+                  resizeMode="cover"
+                />
               </View>
               <View style={styles.camBadge}>
                 <Text style={{ fontSize: 12 }}>📸</Text>
@@ -181,8 +185,8 @@ export default function ProfileScreen() {
             <FavoritesSection prefs={prefs} onToggle={togglePref} />
           )}
 
-          {/* Ajustes rápidos (solo en Resumen, al final) */}
-          {tab === "summary" && <SettingsList />}
+          {/* Ajustes rápidos (Solo el de abajo hace logout) */}
+          {tab === "summary" && <SettingsList onLogout={onLogOut} />}
         </View>
       </ScrollView>
     </View>
@@ -191,18 +195,13 @@ export default function ProfileScreen() {
 
 /* ---------- Subcomponentes UI ---------- */
 
-function HeaderPill({action}:any) {
+function HeaderPill() {
   return (
     <View style={styles.headerRow}>
       <View style={[styles.backPill, shadow(4)]}>
         <Text style={{ fontSize: 16 }}>‹</Text>
         <Text style={{ fontWeight: "800", marginLeft: 8 }}>Home</Text>
       </View>
-      <Pressable style = {{left: '70%'}}
-      onPress={action}
-      >
-        <Feather name="log-out" size={24} color="black" />
-      </Pressable>
     </View>
   );
 }
@@ -376,8 +375,7 @@ function SelectableChip({ label, active, tone = "gray", onPress }: SelectableChi
       ? active
         ? { bg: "#FFE5E5", bd: "#FFCACA", tx: "#7C3A3A" }
         : { bg: "#FFFFFF", bd: "#F3E0E0", tx: "#7C3A3A" }
-      : // mint/gray
-      active
+      : active
         ? { bg: "#E6F5EF", bd: "#CDEBDD", tx: "#1F6A5C" }
         : { bg: "#FFFFFF", bd: "#E6ECF2", tx: "#4B5563" };
 
@@ -431,24 +429,38 @@ function OrderCard({ order, showReceipt }: OrderCardProps) {
   );
 }
 
-function SettingsList() {
+function SettingsList({ onLogout }: { onLogout: () => void }) {
   return (
     <View style={{ marginTop: 8, marginBottom: 20 }}>
       <SettingsRow icon="❓" title="Centro de ayuda" />
       <SettingsRow icon="📄" title="Términos y condiciones" />
-      <SettingsRow icon="🚪" title="Cerrar sesión" danger />
+      {/* 👇 SOLO este es funcional */}
+      <SettingsRow icon="🚪" title="Cerrar sesión" danger onPress={onLogout} />
     </View>
   );
 }
 
-type SettingsRowProps = { icon: string; title: string; danger?: boolean };
-function SettingsRow({ icon, title, danger }: SettingsRowProps) {
-  return (
-    <View style={[styles.settingsRow, shadow(2)]}>
+type SettingsRowProps = { icon: string; title: string; danger?: boolean; onPress?: () => void };
+function SettingsRow({ icon, title, danger, onPress }: SettingsRowProps) {
+  const Content = () => (
+    <>
       <Text style={{ fontSize: 16, marginRight: 8 }}>{icon}</Text>
       <Text style={[styles.settingsTxt, danger && { color: "#B45309" }]}>{title}</Text>
       <View style={{ flex: 1 }} />
       <Text style={{ color: "#9AA5B1" }}>›</Text>
+    </>
+  );
+
+  if (onPress) {
+    return (
+      <Pressable onPress={onPress} style={[styles.settingsRow, shadow(2)]}>
+        <Content />
+      </Pressable>
+    );
+    }
+  return (
+    <View style={[styles.settingsRow, shadow(2)]}>
+      <Content />
     </View>
   );
 }
@@ -475,7 +487,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#EBD9D6",
     borderBottomRightRadius: 200,
   },
-  headerRow: { marginTop: 8, marginBottom: 8, flexDirection: "row" , alignItems: 'center', width: '100%'},
+  headerRow: { marginTop: 8, marginBottom: 8, flexDirection: "row", alignItems: 'center', width: '100%' },
   backPill: {
     flexDirection: "row", alignItems: "center",
     backgroundColor: "#E6F5EF",

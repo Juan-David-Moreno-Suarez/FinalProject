@@ -1,7 +1,4 @@
-import { DataContext } from '@/contexts/DataContext'
-import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
-import { LinearGradient } from 'expo-linear-gradient'
-import React, { useContext, useEffect, useRef, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from "react";
 import {
   Animated,
   FlatList,
@@ -10,56 +7,81 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  View
-} from 'react-native'
-import WaitiaChat from './chat'
+  View,
+} from "react-native";
+import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useCart } from "../../contexts/CartContext";  // Importar el contexto
+import WaitiaChat from "./chat";
+import { DataContext } from "@/contexts/DataContext";
 
 export default function home() {
-
-  const [selCat, setSelCat] = useState('Todos')
-  const category = ['Todos', 'Especiales', 'Ensaladas', 'Combos', 'Bebidas']
-  const { getCategoryMenu, getSpecial } = useContext(DataContext)
-  const [menu, setMenu] = useState<any[]>([])
-  const [special, setSpecial] = useState<any>(null)
+  const { addItemToCart, removeItemFromCart } = useCart(); // Acceder a la función de añadir al carrito
+  const [selCat, setSelCat] = useState("Todos");
+  const category = ["Todos", "Especiales", "Ensaladas", "Combos", "Bebidas"];
+  const { getCategoryMenu, getSpecial } = useContext(DataContext);
+  const [menu, setMenu] = useState<any[]>([]);
+  const [special, setSpecial] = useState<any>(null);
+  const [selectedItems, setSelectedItems] = useState<any[]>([]); // Estado para los ítems seleccionados
+  const [totalCalories, setTotalCalories] = useState(0); // Estado para el total de calorías
 
   useEffect(() => {
     async function fetchMenu() {
       try {
-        const data = await getCategoryMenu(selCat)
-        setMenu(data || [])
+        const data = await getCategoryMenu(selCat);
+        setMenu(data || []);
       } catch (error) {
-        console.error('Error loading menu:', error)
+        console.error("Error loading menu:", error);
       }
     }
-    fetchMenu()
-  }, [selCat])
+    fetchMenu();
+  }, [selCat]);
 
   useEffect(() => {
     async function fetchSpecial() {
       try {
-        const spec = await getSpecial()
-        setSpecial(spec)
+        const spec = await getSpecial();
+        setSpecial(spec);
       } catch (error) {
-        console.error('Error loading menu:', error)
+        console.error("Error loading special:", error);
       }
     }
-    fetchSpecial()
-  }, [])
+    fetchSpecial();
+  }, []);
 
-  const BUTTON_HEIGHT = 75
-  const ballPosition = useRef(new Animated.Value(0)).current
+  const BUTTON_HEIGHT = 75;
+  const ballPosition = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const index = category.indexOf(selCat)
+    const index = category.indexOf(selCat);
     Animated.timing(ballPosition, {
       toValue: index * BUTTON_HEIGHT,
       duration: 230,
-      useNativeDriver: false
-    }).start()
-  }, [selCat])
+      useNativeDriver: false,
+    }).start();
+  }, [selCat]);
+
+  // Función para manejar el + y la selección de ítems
+  const toggleItemSelection = (item: any) => {
+    const isItemSelected = selectedItems.some((i) => i.id === item.id);
+
+    if (isItemSelected) {
+      // Si ya está seleccionado, lo eliminamos
+      const updatedItems = selectedItems.filter((i) => i.id !== item.id);
+      setSelectedItems(updatedItems);
+      setTotalCalories(totalCalories - item.calories);
+      removeItemFromCart(item)
+      console.log("Elemento eliminado")
+    } else {
+      setSelectedItems([...selectedItems, item]);
+      setTotalCalories(totalCalories + item.calories);
+      addItemToCart(item); // Añadir al carrito
+      console.log("Elemento agregado al carrito", item)
+    }
+  };
 
   function OptionCard({ item }: { item: any }) {
-    const [open, setOpen] = useState(false)
+    const [open, setOpen] = useState(false);
 
     return (
       <Pressable
@@ -71,8 +93,8 @@ export default function home() {
         </View>
 
         <View style={styles.optionMiddle}>
-          <Text style={[styles.text, { fontSize: 14 }]} numberOfLines={1}>
-            {item.name}
+          <Text style={[styles.text, { fontSize: 14 }]} numberOfLines={open ? undefined : 1}>
+            {item.name} {/* Este texto ya no tiene recorte cuando está abierto */}
           </Text>
           <Text style={styles.description} numberOfLines={2}>
             {item.description}
@@ -86,9 +108,7 @@ export default function home() {
                   size={16}
                   color="#ffd446ff"
                 />
-                <Text style={[styles.text, { fontSize: 11 }]}>
-                  {item.calories} cal
-                </Text>
+                <Text style={[styles.text, { fontSize: 11 }]}>{item.calories} cal</Text>
               </View>
             </View>
           )}
@@ -96,23 +116,26 @@ export default function home() {
 
         <View style={styles.optionRight}>
           <Text style={[styles.text, { fontSize: 13 }]}>{`$${item.price}`}</Text>
-          {open && (
+          {open && (  // Solo mostrar el botón "+" cuando esté abierto
             <Pressable
               style={({ pressed }) => [
                 styles.addButton,
                 pressed && { transform: [{ scale: 0.9 }] }
               ]}
+              onPress={() => toggleItemSelection(item)} // Llamamos a la función para seleccionar el ítem
             >
-              <Text style={[styles.sCategory, { fontSize: 20 }]}>+</Text>
+              <Text style={[styles.sCategory, { fontSize: 20 }]}>
+                {selectedItems.some(i => i.id === item.id) ? '✓' : '+'}
+              </Text>
             </Pressable>
           )}
         </View>
       </Pressable>
-    )
+    );
   }
 
   function SpecialCard({ item }: { item: any }) {
-    const [open, setOpen] = useState(false)
+    const [open, setOpen] = useState(false);
 
     return (
       <Pressable
@@ -147,19 +170,22 @@ export default function home() {
               marginTop: 10,
               flexDirection: 'row',
               alignItems: 'center',
-              justifyContent: 'space-between'
+              justifyContent: 'space-between',
             }}
           >
             <Text style={[styles.text, { fontSize: 16 }]}>{`$${item.price}`}</Text>
 
-            {open && (
+            {open && (  // Solo mostrar el botón "+" cuando esté abierto
               <Pressable
                 style={({ pressed }) => [
                   styles.addButtonDark,
                   pressed && { transform: [{ scale: 0.9 }] }
                 ]}
+                onPress={() => toggleItemSelection(item)} // Llamamos a la función para seleccionar el especial
               >
-                <Text style={[styles.sCategory, { fontSize: 22 }]}>+</Text>
+                <Text style={[styles.sCategory, { fontSize: 22 }]}>
+                  {selectedItems.some(i => i.id === item.id) ? '✓' : '+'}
+                </Text>
               </Pressable>
             )}
           </View>
@@ -169,10 +195,10 @@ export default function home() {
           <View style={styles.specialImagePlaceholder} />
         </View>
       </Pressable>
-    )
+    );
   }
 
-  const [chatOpen, setChatOpen] = useState(false)
+  const [chatOpen, setChatOpen] = useState(false);
 
   return (
     <LinearGradient
@@ -198,7 +224,6 @@ export default function home() {
       </View>
 
       <View style={styles.mainContent}>
-        {/* ==== BARRA LATERAL AJUSTADA ==== */}
         <View style={styles.catContainer}>
           <View style={styles.sidebarTitleBox}>
             <Text style={styles.sidebarTitle}>ESPECIAL DEL DÍA</Text>
@@ -266,9 +291,9 @@ export default function home() {
           </View>
           <View>
             <Text style={[styles.text, { fontSize: 14 }]}>
-              Selección: 0 kcal
+              Selección: {totalCalories} cal
             </Text>
-            <Text style={styles.description}>Goal: 2000 kcal</Text>
+            <Text style={styles.description}>Meta: 2000 calorías diarias</Text>
           </View>
         </View>
       </View>
@@ -297,7 +322,7 @@ export default function home() {
         </View>
       </Modal>
     </LinearGradient>
-  )
+  );
 }
 
 const styles = StyleSheet.create({

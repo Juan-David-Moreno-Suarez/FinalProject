@@ -1,6 +1,5 @@
-import React, { useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import {
-  SafeAreaView,
   View,
   Text,
   StyleSheet,
@@ -13,6 +12,9 @@ import {
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { DataContext } from "@/contexts/DataContext";
+import { useFocusEffect } from "expo-router";
+import { supabase } from "@/utils/supabase";
 
 /* ------------------ Tipos ------------------ */
 type StepStatus = "done" | "current" | "pending";
@@ -23,31 +25,43 @@ type Step = {
   subtitle: string;
 };
 
-type OrderItem = {
-  id: string;
-  name: string;
-  qty: number;
-  kcal: number;
-  price: number;
-  note?: string;
-};
-
-/* ---- assets de los pasos (usa los nombres que me diste) ---- */
 const stepIconByTitle: Record<string, any> = {
-  Tomado: require("../../assets/images/Tomando.png"),
+  "En proceso": require("../../assets/images/Tomando.png"),
   "Avisado a cocina": require("../../assets/images/avisando a cocina.png"),
   "En preparación": require("../../assets/images/en preparacion.png"),
-  Emplatando: require("../../assets/images/emplatando.png"),
+  "Emplatando": require("../../assets/images/emplatando.png"),
   "En camino": require("../../assets/images/en camino.png"),
-  Entregado: require("../../assets/images/entregado.png"),
+  "Entregado": require("../../assets/images/entregado.png"),
 };
 
-/* ----------------- Pantalla ----------------- */
 export default function Track() {
   const router = useRouter();
+  const { getOrder, getOrderMenu } = useContext(DataContext)
+  const [orderId, setOrderId] = useState<any>()
+  const [order, setOrder] = useState<any>([])
 
+  useEffect(() => {
+    const fetchOrderId = async () => {
+      const orderData = await getOrder()
+      setOrderId(orderData.id)
+    }
+    fetchOrderId()
+
+  }, [])
+
+  useEffect(() => {
+  const fetchOrderItems = async () => {
+    if (!orderId) return; // Si no hay orderId, no hacer nada
+    const items = await getOrderMenu(orderId);
+    console.log(items)
+    setOrder(Array.isArray(items) ? items : []);
+  };
+  fetchOrderItems();
+}, [orderId]);
+
+  console.log(orderId)
   const steps: Step[] = [
-    { id: "s1", title: "Tomado", subtitle: "Tu orden ha sido recibida" },
+    { id: "s1", title: "En proceso", subtitle: "Tu orden ha sido recibida" },
     { id: "s2", title: "Avisado a cocina", subtitle: "La cocina ha recibido tu pedido" },
     { id: "s3", title: "En preparación", subtitle: "Chef Ana está cocinando" },
     { id: "s4", title: "Emplatando", subtitle: "Finalizando la presentación" },
@@ -58,27 +72,18 @@ export default function Track() {
   // índice de la etapa actual
   const [current, setCurrent] = useState<number>(2);
 
-  const order: OrderItem[] = [
-    { id: "o1", name: "Pizza Margherita", qty: 1, kcal: 850, price: 18.5, note: "Extra queso" },
-    { id: "o2", name: "Ensalada César", qty: 2, kcal: 420, price: 12.0 },
-    { id: "o3", name: "Limonada Natural", qty: 1, kcal: 120, price: 4.5 },
-  ];
-
-  const subtotal = useMemo(() => order.reduce((acc, it) => acc + it.price, 0), [order]);
-  const taxes = 6.89;
-  const total = subtotal + taxes;
+  const subtotal = useMemo(() => order.reduce((acc: any, it: any) => acc + it.price, 0), [order]);
 
   const progress = (current / (steps.length - 1)) * 100;
 
-  // simular avance (útil en demo)
   const advance = () => setCurrent((i) => Math.min(i + 1, steps.length - 1));
 
   const goBack = () => router.back();
   const goPay = () => router.push('/pagos');
 
   return (
-    <SafeAreaView style={styles.safe}>
-      {/* ---- HEADER tipo “pastilla” con degradado ---- */}
+    <View style={styles.safe}>
+
       <LinearGradient
         colors={["#F3B7B0", "#CFEFE8"]}
         start={{ x: 0, y: 0 }}
@@ -95,7 +100,6 @@ export default function Track() {
 
         <View style={styles.headerChipsRow}>
           <Pill label="Mesa 12" tone="mint" large />
-          <Pill label="Juan Perez" tone="white" large />
         </View>
 
         <Text style={styles.headerHint}>Te avisaremos en cada fase</Text>
@@ -106,7 +110,7 @@ export default function Track() {
           contentContainerStyle={{ paddingBottom: 140 }}
           showsVerticalScrollIndicator={false}
         >
-          {/* Timeline de estados */}
+
           <View style={[styles.cardOuter, shadow(14)]}>
             {steps.map((s, idx) => {
               const status: StepStatus =
@@ -125,7 +129,7 @@ export default function Track() {
             })}
           </View>
 
-          {/* Tarjeta de estado (barra de progreso + cola) */}
+
           <View style={[styles.stateCard, shadow(10)]}>
             <View style={styles.progressRow}>
               <Text style={styles.timeText}>00:00</Text>
@@ -140,7 +144,7 @@ export default function Track() {
           </View>
 
           {/* Resumen del pedido */}
-          <OrderSummaryCard items={order} subtotal={subtotal} taxes={taxes} total={total} />
+          <OrderSummaryCard items={order} subtotal={subtotal} />
         </ScrollView>
 
         {/* ---- CTA inferior con botón PAGAR “pastilla” amarilla ---- */}
@@ -156,7 +160,7 @@ export default function Track() {
           </Pressable>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -238,29 +242,25 @@ function Badge({ label, tone }: BadgeProps) {
 }
 
 type OrderSummaryCardProps = {
-  items: OrderItem[];
+  items: any;
   subtotal: number;
-  taxes: number;
-  total: number;
 };
-function OrderSummaryCard({ items, subtotal, taxes, total }: OrderSummaryCardProps) {
+function OrderSummaryCard({ items, subtotal }: OrderSummaryCardProps) {
   return (
     <View style={[styles.orderCard, shadow(14)]}>
       <View style={styles.orderHeader}>
         <Text style={styles.orderTitle}>Tu pedido ({items.length})</Text>
-        <Text style={styles.orderTotal}>{formatCurrency(total)}</Text>
       </View>
 
-      {items.map((it) => (
-        <View key={it.id} style={styles.orderRow}>
+      {items.map((it: any) => (
+        <View key={it.item_id} style={styles.orderRow}>
           <View style={{ flex: 1 }}>
             <Text style={styles.itemLine}>
-              {it.name} <Text style={styles.muted}>× {it.qty}</Text>
+              {it.name} <Text style={styles.muted}>× {it.quantity}</Text>
             </Text>
             {!!it.note && <Text style={styles.itemNote}>{it.note}</Text>}
           </View>
           <View style={styles.itemRight}>
-            <Text style={styles.kcal}>⚡ {it.kcal}</Text>
             <Text style={styles.price}>{formatCurrency(it.price)}</Text>
           </View>
         </View>
@@ -272,14 +272,6 @@ function OrderSummaryCard({ items, subtotal, taxes, total }: OrderSummaryCardPro
         <Text style={styles.muted}>Subtotal</Text>
         <Text style={styles.muted}>{formatCurrency(subtotal)}</Text>
       </View>
-      <View style={styles.totalRow}>
-        <Text style={styles.muted}>Impuestos</Text>
-        <Text style={styles.muted}>{formatCurrency(taxes)}</Text>
-      </View>
-
-      <Pressable style={styles.addMoreBtn}>
-        <Text style={styles.addMoreTxt}>Agregar algo más →</Text>
-      </Pressable>
     </View>
   );
 }
@@ -312,6 +304,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 8,
   },
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   backBtn: {
     width: 36,
     height: 36,
@@ -331,12 +328,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 14,
     alignItems: "center",
-    justifyContent: "flex-start",
+    justifyContent: "center",
     marginTop: 8,
     marginBottom: 6,
   },
   headerHint: {
-    textAlign: "left",
+    textAlign: "center",
     marginTop: 6,
     color: "#334155",
     fontWeight: "600",
@@ -502,8 +499,8 @@ function formatCurrency(n: number) {
   try {
     return new Intl.NumberFormat("es-CO", {
       style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
+      currency: "COP",
+      minimumFractionDigits: 0,
     }).format(n);
   } catch {
     return `$${n.toFixed(2)}`;

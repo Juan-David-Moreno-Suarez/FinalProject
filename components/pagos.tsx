@@ -25,17 +25,16 @@ export default function Pagos() {
   const [tipPct, setTipPct] = useState<number>(0.10);
 
   // Datos (mock)
-  const SUBTOTAL = 39096; // COP
-  const SHIPPING = 3096;
-  const TAXES = 3096;
+  const SUBTOTAL = 39096;
+  const TAXES = SUBTOTAL*0.19;
 
   const tipAmount = useMemo(() => Math.round(SUBTOTAL * tipPct), [SUBTOTAL, tipPct]);
-  const totalCash = useMemo(() => SUBTOTAL + SHIPPING + TAXES + tipAmount, [SUBTOTAL, SHIPPING, TAXES, tipAmount]);
+  const totalCash = useMemo(() => SUBTOTAL  + TAXES + tipAmount, [SUBTOTAL, TAXES, tipAmount]);
   const totalCard = useMemo(() => SUBTOTAL + TAXES + tipAmount, [SUBTOTAL, TAXES, tipAmount]);
 
   const proceed = () => {
     
-    //!router.push('/calificacion');
+    router.push('/calificacion');
   };
 
   return (
@@ -58,7 +57,6 @@ export default function Pagos() {
         <View style={styles.stepRow}>
           <StepChip label="Carrito" />
           <StepChip label="Pago" active />
-          <StepChip label="Confirmación" />
         </View>
       </LinearGradient>
 
@@ -88,7 +86,7 @@ export default function Pagos() {
               {/* Resumen efectivo (incluye Envío) */}
               <View style={{ gap: 10 }}>
                 <Row label="Subtotal" value={formatCOP(SUBTOTAL)} muted />
-                <Row label="Envío" value={formatCOP(SHIPPING)} muted />
+                
                 <Row label="Impuestos" value={formatCOP(TAXES)} muted />
               </View>
 
