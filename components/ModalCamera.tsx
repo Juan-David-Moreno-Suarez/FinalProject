@@ -12,12 +12,12 @@ export default function ModalCamera() {
 
   const handleScanPress = () => {
     if (isPermissionGranted) {
-      setShowScanner(true); // Mostrar el componente QrScan
+      setShowScanner(true); 
     }
   };
 
   if (showScanner) {
-    return <QrScan/>; // Muestra el escáner en lugar del modal original
+    return <QrScan/>;
   }
 
   return (

@@ -20,7 +20,7 @@ export default function QrScan() {
 
                 onBarcodeScanned={
                     ({ data }) => {
-                        console.log(data); // here you can get your barcode id or url
+                        console.log(data); 
                     }
                 }
             />

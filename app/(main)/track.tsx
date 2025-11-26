@@ -1,22 +1,10 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  ScrollView,
-  Platform,
-  StatusBar,
-  Image,
-} from "react-native";
-import { useRouter } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
 import { DataContext } from "@/contexts/DataContext";
-import { useFocusEffect } from "expo-router";
-import { supabase } from "@/utils/supabase";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import React, { useContext, useEffect, useMemo, useState } from "react";
+import { Image, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, View } from "react-native";
 
-/* ------------------ Tipos ------------------ */
 type StepStatus = "done" | "current" | "pending";
 
 type Step = {
@@ -50,14 +38,14 @@ export default function Track() {
   }, [])
 
   useEffect(() => {
-  const fetchOrderItems = async () => {
-    if (!orderId) return; // Si no hay orderId, no hacer nada
-    const items = await getOrderMenu(orderId);
-    console.log(items)
-    setOrder(Array.isArray(items) ? items : []);
-  };
-  fetchOrderItems();
-}, [orderId]);
+    const fetchOrderItems = async () => {
+      if (!orderId) return; // Si no hay orderId, no hacer nada
+      const items = await getOrderMenu(orderId);
+      console.log(items)
+      setOrder(Array.isArray(items) ? items : []);
+    };
+    fetchOrderItems();
+  }, [orderId]);
 
   console.log(orderId)
   const steps: Step[] = [
@@ -69,7 +57,6 @@ export default function Track() {
     { id: "s6", title: "Entregado", subtitle: "¡Disfruta tu comida!" },
   ];
 
-  // índice de la etapa actual
   const [current, setCurrent] = useState<number>(2);
 
   const subtotal = useMemo(() => order.reduce((acc: any, it: any) => acc + it.price, 0), [order]);
@@ -143,18 +130,15 @@ export default function Track() {
             <Text style={styles.stateMsg}>Chef Ana está preparando tu orden.</Text>
           </View>
 
-          {/* Resumen del pedido */}
           <OrderSummaryCard items={order} subtotal={subtotal} />
         </ScrollView>
 
-        {/* ---- CTA inferior con botón PAGAR “pastilla” amarilla ---- */}
         <View style={[styles.bottomBar, shadow(16)]}>
           <Pressable style={styles.payBtn} onPress={goPay}>
             <Ionicons name="star-outline" size={20} color="#1B2533" style={{ marginRight: 10 }} />
             <Text style={styles.payBtnText}>PAGAR</Text>
           </Pressable>
 
-          {/* (solo para demo) avanzar estado */}
           <Pressable onPress={advance} style={styles.advanceBtn} hitSlop={10}>
             <Text style={styles.advanceTxt}>Avanzar</Text>
           </Pressable>
@@ -163,8 +147,6 @@ export default function Track() {
     </View>
   );
 }
-
-/* ------------------ Subcomponentes ------------------ */
 
 type PillProps = { label: string; tone?: "mint" | "white" | "gray"; large?: boolean };
 function Pill({ label, tone = "gray", large = false }: PillProps) {
@@ -201,7 +183,6 @@ function StepRow({ title, subtitle, status, showConnector }: StepRowProps) {
 
   return (
     <View style={styles.stepRow}>
-      {/* Columna izquierda: imagen del estado */}
       <View style={styles.leftCol}>
         <View style={[styles.iconWrap, shadow(6), current && { borderColor: "#00A88B" }]}>
           <Image source={stepIconByTitle[title]} resizeMode="cover" style={styles.stepImage} />
@@ -214,7 +195,6 @@ function StepRow({ title, subtitle, status, showConnector }: StepRowProps) {
         {showConnector && <View style={styles.connector} />}
       </View>
 
-      {/* Contenido derecha */}
       <View style={styles.rightCol}>
         <View style={styles.stepHeader}>
           <Text style={[styles.stepTitle, status === "pending" && { opacity: 0.6 }]}>{title}</Text>
@@ -276,10 +256,8 @@ function OrderSummaryCard({ items, subtotal }: OrderSummaryCardProps) {
   );
 }
 
-/* ------------------ Estilos ------------------ */
-
 const BG = "#F6F7FB";
-const TEXT = "#0F172A"; // oscuro
+const TEXT = "#0F172A";
 const MUTED = "#6B7280";
 
 const styles = StyleSheet.create({
@@ -290,7 +268,6 @@ const styles = StyleSheet.create({
   },
   container: { flex: 1, paddingHorizontal: 16 },
 
-  /* Header “pastilla” */
   headerGradient: {
     marginHorizontal: 12,
     marginTop: 6,
@@ -352,7 +329,6 @@ const styles = StyleSheet.create({
   },
   pillTxt: { fontWeight: "800" },
 
-  /* Timeline card */
   cardOuter: {
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
@@ -412,7 +388,6 @@ const styles = StyleSheet.create({
   },
   badgeTxt: { fontWeight: "800", fontSize: 12 },
 
-  /* Estado/barra */
   stateCard: {
     backgroundColor: "#E9F4F1",
     borderRadius: 16,
@@ -434,7 +409,6 @@ const styles = StyleSheet.create({
   queueRow: { marginBottom: 8 },
   stateMsg: { color: TEXT },
 
-  /* Order card */
   orderCard: {
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
@@ -460,7 +434,6 @@ const styles = StyleSheet.create({
   addMoreBtn: { marginTop: 8 },
   addMoreTxt: { color: "#18A377", fontWeight: "700" },
 
-  /* Bottom bar */
   bottomBar: {
     position: "absolute",
     left: 12,
@@ -494,7 +467,6 @@ const styles = StyleSheet.create({
   advanceTxt: { color: "#7C3A3A", fontWeight: "800" },
 });
 
-/* ---------- Utilidades ---------- */
 function formatCurrency(n: number) {
   try {
     return new Intl.NumberFormat("es-CO", {

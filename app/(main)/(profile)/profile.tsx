@@ -1,20 +1,8 @@
 import { supabase } from "@/utils/supabase";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  ScrollView,
-  Platform,
-  StatusBar,
-  TextInput,
-  Alert,
-  Image, // 👈 importamos Image
-} from "react-native";
+import { Alert, Image, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from "react-native";
 
-/* ---------- Tipos ---------- */
 type TabKey = "summary" | "history" | "favorites";
 
 type Order = {
@@ -37,7 +25,6 @@ type Pref = {
   active: boolean;
 };
 
-/* ---------- Datos de ejemplo ---------- */
 const RECENT_ORDERS: Order[] = [
   {
     id: "1",
@@ -111,7 +98,6 @@ const PREFS_DEFAULT: Pref[] = [
   { id: "a6", label: "Soya", group: "allergen", tone: "gray", active: false },
 ];
 
-/* ---------- Pantalla ---------- */
 export default function ProfileScreen() {
   const [tab, setTab] = useState<TabKey>("summary");
   const [prefs, setPrefs] = useState<Pref[]>(PREFS_DEFAULT);
@@ -134,19 +120,15 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.safe}>
-      {/* Fondo decorativo */}
       <View style={styles.hero}>
         <View style={styles.heroTop} />
       </View>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
-          {/* Header: dejamos el icono de logout solo como decoración (NO clickable) */}
           <HeaderPill />
 
-          {/* Tarjeta principal */}
           <View style={[styles.mainCard, shadow(18)]}>
-            {/* Avatar con imagen de perfil */}
             <View style={styles.avatarWrap}>
               <View style={[styles.avatar, shadow(8)]}>
                 <Image
@@ -160,7 +142,6 @@ export default function ProfileScreen() {
               </View>
             </View>
 
-            {/* Info básica */}
             <View style={[styles.infoCard, shadow(6)]}>
               <Text style={styles.name}>María González</Text>
               <Text style={styles.email}>maria.gonzalez@yummi.app</Text>
@@ -169,13 +150,11 @@ export default function ProfileScreen() {
               </View>
             </View>
 
-            {/* Stats */}
             <View style={styles.statsRow}>
               <StatCard title="Pedidos" value={`${ordersCount}`} icon="🧾" />
               <StatCard title="Gastado" value={formatCurrency(spent)} icon="💵" />
             </View>
 
-            {/* Tabs */}
             <TabBar active={tab} onChange={setTab} />
           </View>
 
@@ -185,15 +164,12 @@ export default function ProfileScreen() {
             <FavoritesSection prefs={prefs} onToggle={togglePref} />
           )}
 
-          {/* Ajustes rápidos (Solo el de abajo hace logout) */}
           {tab === "summary" && <SettingsList onLogout={onLogOut} />}
         </View>
       </ScrollView>
     </View>
   );
 }
-
-/* ---------- Subcomponentes UI ---------- */
 
 function HeaderPill() {
   return (
@@ -239,12 +215,9 @@ function TabBar({ active, onChange }: TabBarProps) {
   );
 }
 
-/* ---------- Secciones ---------- */
-
 function SummarySection() {
   return (
     <View>
-      {/* Preferencias (chips) */}
       <View style={[styles.card, shadow(8)]}>
         <View style={styles.cardHeaderRow}>
           <Text style={styles.cardTitle}>Preferencias</Text>
@@ -257,8 +230,6 @@ function SummarySection() {
           <Chip label="< 500 kcal" />
         </View>
       </View>
-
-      {/* Últimos pedidos */}
       <View style={{ marginTop: 14 }}>
         <View style={styles.cardHeaderRow}>
           <Text style={styles.sectionTitle}>Últimos pedidos</Text>
@@ -275,7 +246,6 @@ function SummarySection() {
 function HistorySection() {
   return (
     <View style={{ marginTop: 6 }}>
-      {/* Filtros */}
       <View style={styles.filterRow}>
         <FilterChip label="Últ. 30 días" active />
         <FilterChip label="Este mes" />
@@ -285,7 +255,6 @@ function HistorySection() {
         <FilterChip label="Reordenados" />
       </View>
 
-      {/* Buscador */}
       <View style={[styles.searchBar, shadow(2)]}>
         <Text style={{ marginRight: 8 }}>🔎</Text>
         <TextInput
@@ -295,7 +264,6 @@ function HistorySection() {
         />
       </View>
 
-      {/* Lista por fechas */}
       {Object.entries(HISTORY).map(([date, items]) => (
         <View key={date} style={{ marginTop: 16 }}>
           <Text style={styles.dateHeader}>{date}</Text>
@@ -336,7 +304,6 @@ function FavoritesSection({ prefs, onToggle }: FavoritesProps) {
         </View>
       </View>
 
-      {/* Botones inferiores */}
       <View style={styles.actionsRow}>
         <Pressable style={[styles.actionBtn, styles.btnLight]}>
           <Text style={[styles.actionTxt, { color: "#374151" }]}>Cancelar</Text>
@@ -348,8 +315,6 @@ function FavoritesSection({ prefs, onToggle }: FavoritesProps) {
     </View>
   );
 }
-
-/* ---------- Piezas reutilizables ---------- */
 
 type ChipProps = { label: string; tone?: "mint" | "gray" };
 function Chip({ label, tone = "gray" }: ChipProps) {
@@ -457,15 +422,13 @@ function SettingsRow({ icon, title, danger, onPress }: SettingsRowProps) {
         <Content />
       </Pressable>
     );
-    }
+  }
   return (
     <View style={[styles.settingsRow, shadow(2)]}>
       <Content />
     </View>
   );
 }
-
-/* ---------- Estilos ---------- */
 
 const BG = "#F6F7FB";
 const TEXT = "#111827";
@@ -479,7 +442,6 @@ const styles = StyleSheet.create({
   },
   container: { paddingHorizontal: 16 },
 
-  /* Hero decorativo */
   hero: { position: "absolute", left: 0, right: 0, top: 0, height: 220 },
   heroTop: {
     position: "absolute",
@@ -497,7 +459,6 @@ const styles = StyleSheet.create({
 
   mainCard: { marginTop: 6 },
 
-  /* Avatar */
   avatarWrap: { alignItems: "center", marginTop: 12 },
   avatar: {
     width: 96, height: 96, borderRadius: 48,
@@ -512,7 +473,6 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: "#CDEBDD",
   },
 
-  /* Info principal */
   infoCard: {
     marginTop: 10, backgroundColor: "#FFFFFF", borderRadius: 20,
     padding: 16, borderWidth: 1, borderColor: "#E6ECF2",
@@ -526,7 +486,6 @@ const styles = StyleSheet.create({
   },
   roleTxt: { color: "#374151", fontWeight: "800" },
 
-  /* Stats */
   statsRow: { flexDirection: "row", gap: 12, marginTop: 12 },
   statCard: {
     flex: 1, backgroundColor: "#FFFFFF", borderRadius: 16,
@@ -537,7 +496,6 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 18, fontWeight: "800", color: TEXT },
   statLabel: { color: MUTED, marginTop: 2 },
 
-  /* Tabs */
   tabsRow: {
     flexDirection: "row", gap: 8, marginTop: 14, marginBottom: 6,
   },
@@ -549,7 +507,6 @@ const styles = StyleSheet.create({
   tabTxt: { color: "#374151", fontWeight: "700" },
   tabTxtActive: { color: "#1F6A5C", fontWeight: "800" },
 
-  /* Cards & chips */
   card: {
     backgroundColor: "#FFFFFF", borderRadius: 18, padding: 14,
     borderWidth: 1, borderColor: "#E6ECF2", marginTop: 8,
@@ -565,7 +522,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
 
-  /* Order Card */
   orderCard: {
     backgroundColor: "#FFFFFF", borderRadius: 18, padding: 14,
     borderWidth: 1, borderColor: "#E6ECF2", marginTop: 10,
@@ -591,7 +547,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAFC", borderWidth: 1, borderColor: "#E6ECF2",
   },
 
-  /* Filtros / search */
   filterRow: { flexDirection: "row", gap: 8, marginTop: 8 },
   searchBar: {
     marginTop: 10, backgroundColor: "#FFFFFF", borderRadius: 18,
@@ -600,7 +555,6 @@ const styles = StyleSheet.create({
   },
   dateHeader: { marginTop: 2, color: TEXT, fontWeight: "800" },
 
-  /* Settings */
   settingsRow: {
     marginTop: 10, padding: 14, borderRadius: 16,
     backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E6ECF2",
@@ -608,7 +562,6 @@ const styles = StyleSheet.create({
   },
   settingsTxt: { color: TEXT, fontWeight: "700" },
 
-  /* Favoritos acciones */
   actionsRow: { flexDirection: "row", gap: 10, marginTop: 10, marginBottom: 16 },
   actionBtn: {
     flex: 1, height: 46, borderRadius: 18, alignItems: "center", justifyContent: "center",
@@ -619,7 +572,6 @@ const styles = StyleSheet.create({
   actionTxt: { fontWeight: "800" },
 });
 
-/* ---------- Extras ---------- */
 function FilterChip({ label, active = false }: { label: string; active?: boolean }) {
   return (
     <View

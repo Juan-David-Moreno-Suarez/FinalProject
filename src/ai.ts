@@ -1,16 +1,8 @@
-// src/ai.ts
- 
-/* --- json del menú (está en app/data) --- */
-// RN + TS: usa require y declara el tipo para evitar el error de TS.
 declare const require: any;
 const MENU: any = require('../app/data/menu.json');
- 
-/* --- Tipos que usa el chat --- */
+
 export type Turn = { role: 'user' | 'model'; text: string };
 export type AskResult = { reply: string };
- 
-/* --- Endpoint / Modelo (REST v1beta funciona estable) --- */
-const API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 const MODEL = 'gemini-2.5-flash';
  
 const systemPrompt = `
@@ -41,9 +33,10 @@ function takeText(json: any): string | null {
   }
 }
  
+
 export async function askWaitia(content: string, history: Turn[] = []): Promise<AskResult> {
-  const url = `${API_BASE}/models/${MODEL}:generateContent`;
-  const key = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
+  const key = process.env.EXPO_PUBLIC_GEMINI_API_KEY
  
   const resp = await fetch(url, {
     method: 'POST',

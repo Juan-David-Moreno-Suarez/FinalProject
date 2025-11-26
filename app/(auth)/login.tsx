@@ -102,10 +102,7 @@ export default function login() {
         {field(email, setEmail, "tu@email.com")}
         <Text style={[styles.text, { alignSelf: 'flex-start' }]}>Contraseña</Text>
         {field(password, setPassword, "Abc-123", true)}
-        {/*<View style={styles.rowView}>
-          <Switch />
-          <Text style={styles.subtext} >Remember me</Text>
-        </View>*/}
+        
         <Pressable
           style={({ pressed }) => [styles.pressable, pressed && { transform: [{ scale: 0.9 }] }]}
           onPress={() => goToLog()}

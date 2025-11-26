@@ -1,24 +1,14 @@
-import React, { useContext, useMemo, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  FlatList,
-  Platform,
-  StatusBar,
-  Modal,
-  Alert,
-} from "react-native";
+import { DataContext } from "@/contexts/DataContext";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useCart } from "../../contexts/CartContext";
 import { useRouter } from "expo-router";
-import { DataContext } from "@/contexts/DataContext";
+import React, { useContext, useMemo, useState } from "react";
+import { Alert, FlatList, Modal, Platform, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
+import { useCart } from "../../contexts/CartContext";
 
 export default function Cart() {
   const { cartItems, removeItemFromCart, updateItemQty, clearCart } = useCart();
-  const {createOrder} = useContext(DataContext);
+  const { createOrder } = useContext(DataContext);
   const [tableModalVisible, setTableModalVisible] = useState(false);
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
@@ -42,7 +32,7 @@ export default function Cart() {
 
   const tables = Array.from({ length: 10 }, (_, i) => i + 1);
 
-  const handleConfirmOrder = async() => {
+  const handleConfirmOrder = async () => {
     if (selectedTable == null) {
       Alert.alert("Mesa no seleccionada", "Por favor elige un número de mesa.");
       return;
@@ -112,7 +102,6 @@ export default function Cart() {
         </View>
       </View>
 
-      {/* ===== Modal selección de mesa ===== */}
       <Modal
         transparent
         visible={tableModalVisible}
@@ -157,9 +146,9 @@ export default function Cart() {
               </Pressable>
 
               <Pressable
-              disabled={isButtonDisabled}
-                style={[styles.modalConfirmButton, isButtonDisabled && {backgroundColor: '#B0B0B0'}]}
-                onPress={() =>{
+                disabled={isButtonDisabled}
+                style={[styles.modalConfirmButton, isButtonDisabled && { backgroundColor: '#B0B0B0' }]}
+                onPress={() => {
                   setIsButtonDisabled(true)
                   handleConfirmOrder()
                 }}
@@ -544,8 +533,6 @@ const styles = StyleSheet.create({
   },
 });
 
-
-/* Cross-platform shadow helper */
 function shadow(elevation = 8) {
   if (Platform.OS === "android") return { elevation };
   const op = 0.18 + Math.min(0.32, elevation * 0.01);

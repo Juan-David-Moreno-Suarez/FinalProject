@@ -29,7 +29,6 @@ export default function AuthProvider(props: AuthContextProps) {
         if (error) throw error;
 
         if (data.session) {
-          // Validar que el usuario exista realmente
           const { data: user, error: userError } = await supabase.auth.getUser();
 
           if (userError || !user) {

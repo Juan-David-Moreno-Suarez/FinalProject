@@ -9,7 +9,6 @@ export function useCart() {
 export function CartProvider({ children }: any) {
   const [cartItems, setCartItems] = useState<any[]>([]);
 
-  // Agregar un item al carrito
   const addItemToCart = (item: any) => {
     setCartItems((prevItems) => {
       const itemExists = prevItems.find((i) => i.id === item.id);
@@ -23,7 +22,6 @@ export function CartProvider({ children }: any) {
     });
   };
 
-  // Eliminar un item del carrito
   const removeItemFromCart = (item: any) => {
     setCartItems((prevItems) => {
       console.log(cartItems)
@@ -37,7 +35,6 @@ export function CartProvider({ children }: any) {
     setCartItems([])
   }
 
-  // Actualizar la cantidad de un item
   const updateItemQty = (id: string, qty: number) => {
     setCartItems((prevItems) =>
       prevItems.map((item) =>

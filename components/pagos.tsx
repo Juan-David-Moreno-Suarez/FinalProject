@@ -39,7 +39,6 @@ export default function Pagos() {
 
   return (
     <View style={styles.safe}>
-      {/* Header degradado */}
       <LinearGradient
         colors={['#F6CFCF', '#F7E6DE', '#DAF1EC']}
         start={{ x: 0, y: 0 }}
@@ -60,9 +59,7 @@ export default function Pagos() {
         </View>
       </LinearGradient>
 
-      {/* Contenido */}
       <View style={styles.container}>
-        {/* Toggle Efectivo / Tarjeta */}
         <View style={[styles.segment, shadow(8)]}>
           <SegmentBtn label="Efectivo" active={method === 'cash'} onPress={() => setMethod('cash')} />
           <SegmentBtn label="Tarjeta" active={method === 'card'} onPress={() => setMethod('card')} />
@@ -71,19 +68,18 @@ export default function Pagos() {
         <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
           {method === 'cash' ? (
             <>
-              {/* Tarjeta con imagen y mensaje */}
+             
               <View style={[styles.card, shadow(12)]}>
                 <Text style={styles.cardMsg}>Tu meser@ asignado está en camino</Text>
                 <Image
-                  // ↙️ desde components/ a assets/images/ es ../
+                  
                   source={require('../assets/images/efectivo.png')}
-                  // si tu archivo se llama 'efectivo.png', cambia la línea de arriba
                   resizeMode="contain"
                   style={{ width: '100%', height: 120, marginTop: 8 }}
                 />
               </View>
 
-              {/* Resumen efectivo (incluye Envío) */}
+              
               <View style={{ gap: 10 }}>
                 <Row label="Subtotal" value={formatCOP(SUBTOTAL)} muted />
                 
@@ -101,7 +97,7 @@ export default function Pagos() {
             </>
           ) : (
             <>
-              {/* Form tarjeta */}
+              
               <View style={[styles.card, shadow(12)]}>
                 <LabeledInput
                   label="Número de tarjeta"
@@ -130,7 +126,7 @@ export default function Pagos() {
                 </View>
               </View>
 
-              {/* Resumen tarjeta (sin envío) */}
+             
               <View style={[styles.card, shadow(10)]}>
                 <Text style={styles.resumeTitle}>Resumen</Text>
                 <View style={{ height: 8 }} />
@@ -150,7 +146,7 @@ export default function Pagos() {
           )}
         </ScrollView>
 
-        {/* Botón inferior “Proceder” */}
+        
         <View style={[styles.bottomBar, shadow(16)]}>
           <Pressable style={{ flex: 1, borderRadius: 18, overflow: 'hidden' }} onPress={proceed}>
             <LinearGradient
@@ -168,7 +164,6 @@ export default function Pagos() {
   );
 }
 
-/* ---------------- Subcomponentes ---------------- */
 
 function StepChip({ label, active }: { label: string; active?: boolean }) {
   return (
@@ -253,8 +248,6 @@ function TipSelector({
   );
 }
 
-/* ---------------- Utilidades ---------------- */
-
 function formatCOP(n: number) {
   try {
     return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n);
@@ -273,8 +266,6 @@ function shadow(elevation = 8) {
     shadowOffset: { width: 0, height: Math.ceil(elevation / 2) },
   };
 }
-
-/* ---------------- Estilos ---------------- */
 
 const styles = StyleSheet.create({
   safe: {

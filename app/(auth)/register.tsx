@@ -123,7 +123,6 @@ export default function register() {
       return;
     }
 
-    // Registro exitoso
     setName("");
     setEmail("");
     setPassword("");

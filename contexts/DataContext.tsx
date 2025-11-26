@@ -7,7 +7,6 @@ interface DataContextProps {
     getAllOrders: () => Promise<any>
     getOrder: () => Promise<any>
     createOrder: (items: any, table: number) => Promise<any>;
-    unfollowUser: (followedId: string) => Promise<any>;
     getCategoryMenu: (category: string) => Promise<any>;
     getSpecial: () => Promise<any>
     getOrderMenu: (orderId: any) => Promise<any>
@@ -116,17 +115,6 @@ export const DataProvider = ({ children }: any) => {
         return null;
     }
 
-    const unfollowUser = async (followedId: string) => {
-        const { data } = await getData()
-        const { error } = await supabase
-            .from("users_interactions")
-            .delete()
-            .eq("follower_id", data?.id)
-            .eq("followed_id", followedId);
-        if (error) return error;
-        return null;
-    }
-
     const getOrderMenu = async (orderId: any) => {
         const { data: itemList, error: itemError } = await supabase
             .from("order_items")
@@ -166,7 +154,6 @@ export const DataProvider = ({ children }: any) => {
             getOrder,
             getAllOrders,
             createOrder,
-            unfollowUser,
             getCategoryMenu,
             getSpecial,
             getOrderMenu

@@ -3,21 +3,21 @@ import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert, Image 
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { Rating } from "react-native-ratings";  // Usamos un paquete de calificación para las estrellas
+import { Rating } from "react-native-ratings";  
 
-// Este componente será la pantalla de calificación
+
 export default function CalificacionScreen() {
   const router = useRouter();
   
-  // Establecemos el estado para las calificaciones
+ 
   const [ratingWaiter, setRatingWaiter] = useState(0);
   const [ratingApp, setRatingApp] = useState(0);
   const [comment, setComment] = useState("");
 
   const onSubmitRating = () => {
-    // Aquí podrías procesar las calificaciones y comentarios
+
     Alert.alert("Calificación Enviada", "¡Gracias por tu calificación!");
-    router.push("/home");  // Redirige a la pantalla home
+    router.push("/home");  
   };
 
   return (
@@ -35,7 +35,6 @@ export default function CalificacionScreen() {
 
       <Text style={styles.title}>Califica a tu mesero</Text>
 
-      {/* Sección de calificación */}
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>¿Cómo te atendió tu mesero?</Text>
         <Rating
@@ -67,7 +66,6 @@ export default function CalificacionScreen() {
         />
       </View>
 
-      {/* Botón Enviar Calificación */}
       <Pressable style={styles.submitBtn} onPress={onSubmitRating}>
         <LinearGradient
           colors={['#FFB98A', '#FFCC8D']}

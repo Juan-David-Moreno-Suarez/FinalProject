@@ -11,13 +11,13 @@ export default function PaymentConfirmation() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+
       <View style={styles.header}>
         <Ionicons name="chevron-back-outline" size={24} color="black" />
         <Text style={styles.headerTitle}>Home</Text>
       </View>
 
-      {/* Content */}
+
       <LinearGradient
         colors={['#E3F2FD', '#FFFFFF']}
         style={styles.contentContainer}
@@ -32,7 +32,7 @@ export default function PaymentConfirmation() {
           Tu pago se ha efectuado correctamente. 🎉 Si pediste efectivo, espera a tu mesero.
         </Text>
 
-        {/* Botón para abrir modal */}
+        
         <Pressable
           style={styles.button}
           onPress={() => router.navigate('/(main)/form')}
@@ -46,7 +46,6 @@ export default function PaymentConfirmation() {
         />
       </LinearGradient>
 
-      {/* Modal */}
       <Modal
         animationType="slide"
         transparent={true}

@@ -1,23 +1,13 @@
 // app/(main)/chat.tsx
-import React, { useEffect, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  TextInput,
-  Image,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useEffect, useRef, useState } from 'react';
+import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { askWaitia, type Turn } from '../../src/ai';
 const WaitiaImg = require('../../assets/images/imagenchat.png');
 
-// ======= Tokens Yummi =======
 const Y = {
   ink: '#181F39',
   mint: '#ADD8CE',
@@ -98,7 +88,6 @@ export default function WaitiaChat() {
     },
   ]);
 
-  // Historial compacto (para enviar a askWaitia)
   const [history, setHistory] = useState<Turn[]>([]);
 
   useEffect(() => {
@@ -109,7 +98,6 @@ export default function WaitiaChat() {
     const content = (value ?? text).trim();
     if (!content) return;
 
-    // pinta mensaje del usuario
     const userMsg: Msg = { id: `u-${Date.now()}`, role: 'user', text: content };
     setMessages(m => [...m, userMsg]);
     setHistory(h => [...h, { role: 'user', text: content }]);
@@ -185,7 +173,6 @@ export default function WaitiaChat() {
             <View style={{ flex: 1 }} />
           </View>
 
-          {/* Barra carrito (placeholder – sin lógica de cart por ahora) */}
           <View
             style={{
               marginTop: 24,
